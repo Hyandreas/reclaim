@@ -1,0 +1,58 @@
+# Judge 1 — Round 1 Review: "Taste — the design-system vibe check inside Cursor"
+
+## TOTAL: 14.0 / 15
+
+A polished, technically deep, and honestly-scoped proposal that reads well above a first draft. Its central insight — move the drift judgment *left* to authorship time, inside Cursor — is the sharpest reading of the brief, and the "promote to system" reverse loop is a genuine standout. It loses fractional points on novelty (the core classification is lifted straight from a brief example), on usefulness (it under-covers the "interactive" half of the track statement), and has a couple of demo-authenticity details to lock down.
+
+---
+
+## NOVELTY — 4.5 / 5
+
+The concept has two genuine, memorable insights rather than one. First, the **authorship-time inversion**: every obvious reading of this track (and all three brief examples) is *audit-time* — a CLI diffing on CI, a visual-regression tool flagging post-merge, a chat you visit. Taste intervenes inside the AI coding loop *before* drift reaches a diff, which is both the most on-brand move for a Cursor-sponsored track and a defensible durable wedge ("the problem compounds as codegen spreads"). Second, and sharper, is the **promote-to-system** move: detecting emergent taste (a 12px step recurring across new components) and drafting a *new token* back to the source of truth. That is the single most direct answer to the track's actual question — "does the system have enough taste to know when something is wrong" — because it demonstrates taste knowing when the *rule itself* is stale, not just when code violates a rule. The tagline "vibe coding needs a vibe check" is memorable and earns its place.
+
+What holds this back from a 5: the three-way classification core — *accidental regression vs intentional redesign vs platform constraint* — is drawn almost verbatim from one of the brief's own examples ("classifies diffs as intentional redesign vs accidental regression vs platform constraint"). So the classification engine itself is expected; the originality lives in the placement (inline, at authorship) and the reverse loop. Those are real insights, but the load-bearing mechanism is a given, which caps this at 4.5.
+
+## IMPLEMENTATION PLAN — 5.0 / 5
+
+This is the strongest axis and a model of what the rubric asks for. The architecture is concrete and technically sound: correct, specific VS Code/Cursor extension APIs (`onDidSaveTextDocument`, `createDiagnosticCollection`, `registerHoverProvider`, `registerCodeActionsProvider`), a named reasoning engine (Claude Opus 4.8 via `@anthropic-ai/sdk`), and — critically — a **deterministic detection layer separated from LLM classification** (regex + `@babel/parser`/`postcss` emits ranged drift events; the model only classifies and explains). That split is exactly the right call for a live demo: the underline "always appears" because detection never depends on the model, and the LLM owns only the pre-seeded, sharp explanation. The Anthropic usage is credible and current — prompt caching (`cache_control: {type:"ephemeral"}`) to make each per-save classification a near-instant `cache_read`, the 1M context window to inline the whole token library + exemplars with zero RAG, structured outputs (`json_schema`, `additionalProperties:false`) for a strict verdict, streaming, and adaptive thinking. The scope honesty is exemplary: a clear **real / scoped-but-bounded / explicitly-cut** table (real extension + detector + grounded verdict + fix + promote diff + ledger; committed `tokens.json` instead of live Figma; cut live sync, GitHub automation as backbone, multi-framework, auth). The Day 1/Day 2 milestones are realistic, the 60-second script is timestamped, and the risk table has real mitigations (latency → caching + pre-warm; model improvisation → curated cases + strict schema; flakiness → deterministic trigger). A capable team could clearly ship this exact demo.
+
+The reservations are demo-curation details, not buildability gaps, so they don't cost the score but should be tightened: the punchline (promote) depends on the drift ledger / git history showing "3 new components this week," and the plan doesn't spell out how that state is *authentically* primed; and the 0:08 beat relies on Cursor's own agent emitting the exact seeded drift on camera. Both are trivially handled (pre-populate the ledger JSON across dated commits; script the agent prompt with a typed fallback), which is why this remains a 5 — but see fixes.
+
+## USEFULNESS / RELEVANCE — 4.5 / 5
+
+This lands squarely on the track's central question. It detects drift, proposes reconciliation (one-click fix + promote diff), and keeps designers and engineers aligned *without a synchronization meeting* — the promote-to-system loop is an explicit, credible answer to "keeping designers and engineers aligned." The taste dimension is answered on all three faces: the classification is a real judgment call, the iOS safe-area case proves restraint (knowing when *not* to fire — the thing that separates taste from linting), and promote proves it knows when the rule is stale. The real-world grounding is accurate and shows domain fluency (Figma Variables / Tokens Studio → W3C Design Tokens → Style Dictionary → CSS/Tailwind → visual-regression → a human triaging "bug vs redesign vs platform quirk"), and the Priya persona (design engineer, human bottleneck across four squads) is concrete and believable. The value proposition — automate the expensive *judgment*, not the cheap diffing, and move it to authorship — is genuinely compelling.
+
+What holds it at 4.5: the track statement asks for reasoning across a product's "visual **and interactive** surface," and this proposal is heavily weighted to *visual-token* drift (color, spacing, type, radius, shadow). Interactive/stateful consistency — hover/focus/disabled states, motion durations, behavioral conventions — is essentially untouched. There is also a residual "it's just an IDE linter" risk; the proposal defends it well (visible `tokens.json` source of truth + design-loop closure), but that defense rests heavily on the single promote beat landing. Covering even one interactive-surface case would move this to a 5.
+
+---
+
+## CONCRETE STRENGTHS
+
+- **The authorship-time inversion is the sharpest reading of the brief** and the most on-brand move for a Cursor track — "we built a Cursor pointed at your design tokens."
+- **Deterministic detection vs LLM classification split** — the demo-reliability decision that most teams miss. The underline is guaranteed by code; the model only does the (curated) explanation. This is what makes it not flaky on the fifth take.
+- **Promote-to-system reverse loop** — genuinely novel and the single sharpest expression of "taste" in the whole track: the system proposing a new token because the rule is stale.
+- **Grounded, anti-hallucination verdicts** — every claim is pinned to a computed number (WCAG contrast, 8pt-grid delta, token lineage, git recency); the LLM classifies, it doesn't invent evidence.
+- **The platform-constraint case (iOS safe-area)** — proactively demonstrates precision/restraint, which is the hardest and most convincing part of "taste."
+- **Correct, specific, current API usage** — VS Code extension APIs and Anthropic features (prompt caching, 1M context, structured outputs, streaming) are named accurately and used for the right reasons (per-save latency, zero-RAG grounding, reliable output shape).
+- **Honest, bounded scope** — a real/scoped/cut table, with the fragile async pieces (Background-Agent PR, vision path) explicitly demoted to pre-verified bonus cuts, never the backbone.
+- **A tight, silent-legible 60-second narrative** (harmony → drift → diagnosis → cure → new-token) that reads on color/motion alone.
+
+## CONCRETE WEAKNESSES / GAPS
+
+- **"Interactive surface" is under-covered.** The tool is almost entirely about visual-token drift; the track explicitly names the interactive surface, and there is no state/motion/behavior example.
+- **The punchline's authenticity is under-specified.** "This 12px step appears in 3 new components this week" depends on ledger + git state that, for a 2-day seeded repo, must be hand-primed — the plan asserts the surface without showing how the history is made real.
+- **The "intentional redesign — stands down" case is described but never shown** in the 60-second script. The script demonstrates regression + promote and only mentions platform/redesign. The redesign non-fire is central to the taste claim and should be on camera.
+- **Live-agent-on-camera risk.** Relying on Cursor's agent to emit the exact seeded drift (`#1a73e8; padding:13px`) during a take is a small but real flake risk.
+- **Novelty ceiling from the brief.** The regression/redesign/platform classification is lifted directly from a brief example, so the concept's originality rests entirely on the inversion + promote.
+- **The promote heuristic is unspecified.** No stated threshold/window for "emergent pattern," and no stated guard against promoting a genuine repeated *mistake* — which would be the worst possible false positive (institutionalizing drift).
+- **Partial-JSON streaming glossed over.** Rendering the `reasoning` field live in the hover card while the output is `json_schema`-constrained requires streaming/parsing partial JSON — feasible, but more involved than "streaming so the verdict renders live" implies.
+
+## PRIORITIZED FIXES (to raise the score)
+
+1. **Add one interactive-surface case** (highest leverage; lifts usefulness toward 5). Seed a stateful/motion drift — e.g., a hardcoded `transition: 240ms` off your `--motion-fast` token, or an inconsistent `:focus-visible`/disabled treatment — and give it a verdict. This closes the literal "visual **and interactive**" gap in the track statement and defuses the "just a visual-token linter" critique in one move.
+2. **Make the promote beat's history authentically real.** State that the seeded repo commits the 3 recurring-12px components across *dated* commits and pre-populates the drift ledger, so "3 new components this week" is computed from real state, not asserted. This is the demo's most differentiating beat — its credibility must be airtight.
+3. **Put the "intentional redesign — stands down" case in the 60-second script.** A ~3-second beat where a coherent system-wide color change is deliberately *not* flagged is the most convincing proof of taste (precision, not just recall). Right now the script only shows the tool firing; show it correctly staying silent.
+4. **De-risk the live-drift moment.** Script the exact Cursor agent prompt that reliably emits the seeded drift, with a typed fallback, and note explicitly that the deterministic detector fires identically either way. Removes the one on-camera dependency on non-deterministic behavior.
+5. **Specify the promote heuristic.** Give the threshold and window (e.g., "same off-grid value in ≥3 distinct components within N days, absent from tokens") and the guard that distinguishes an emergent convention from a repeated mistake. This makes the punchline read as *designed* rather than magic.
+6. **Preempt "it's a linter" with named prior art.** One line naming the closest authorship-time tools (Stylelint token plugins, design-lint, Tokens Studio linting) and stating precisely what they can't do (the grounded three-way judgment + the promote loop) hardens the novelty claim.
+7. **Clarify the streaming detail.** One sentence on how the `reasoning` field streams to the hover card under a strict schema (stream reasoning first, or use a partial-JSON parser) — closes the last small technical loose end.
