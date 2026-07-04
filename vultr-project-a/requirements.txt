@@ -1,0 +1,5 @@
+# The runnable hackathon build uses only the Python standard library.
+# Future FastAPI migration can add:
+# fastapi
+# uvicorn[standard]
+

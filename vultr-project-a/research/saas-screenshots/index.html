@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SaaS Reference Board</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: oklch(98% 0.006 84);
+        --ink: oklch(20% 0.016 252);
+        --muted: oklch(52% 0.012 252);
+        --line: oklch(86% 0.012 252);
+        --dark: oklch(18% 0.018 252);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: end;
+        padding: 22px 26px;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in oklch, var(--paper) 92%, white);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.05;
+      }
+
+      p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        padding: 18px;
+      }
+
+      article {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 1px 2px oklch(20% 0.01 252 / 0.07);
+      }
+
+      article > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      a {
+        color: var(--dark);
+        font-size: 13px;
+        font-weight: 650;
+        text-decoration: none;
+      }
+
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .bad {
+        opacity: 0.62;
+      }
+
+      @media (max-width: 920px) {
+        header {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>SaaS Reference Board</h1>
+        <p>Captured at 1440x1000 for Reclaim frontend redesign research.</p>
+      </div>
+      <a href="README.md">Open notes</a>
+    </header>
+
+    <main>
+      <article>
+        <div><h2>Linear</h2><a href="https://linear.app">linear.app</a></div>
+        <img src="linear.png" alt="Linear homepage screenshot">
+      </article>
+      <article>
+        <div><h2>Retool</h2><a href="https://retool.com">retool.com</a></div>
+        <img src="retool.png" alt="Retool homepage screenshot">
+      </article>
+      <article>
+        <div><h2>Attio</h2><a href="https://attio.com">attio.com</a></div>
+        <img src="attio.png" alt="Attio homepage screenshot">
+      </article>
+      <article>
+        <div><h2>Clerk</h2><a href="https://clerk.com">clerk.com</a></div>
+        <img src="clerk.png" alt="Clerk homepage screenshot">
+      </article>
+      <article>
+        <div><h2>Stripe</h2><a href="https://stripe.com">stripe.com</a></div>
+        <img src="stripe.png" alt="Stripe homepage screenshot">
+      </article>
+      <article>
+        <div><h2>Vercel</h2><a href="https://vercel.com">vercel.com</a></div>
+        <img src="vercel.png" alt="Vercel homepage screenshot">
+      </article>
+      <article>
+        <div><h2>Mercury</h2><a href="https://mercury.com">mercury.com</a></div>
+        <img src="mercury.png" alt="Mercury homepage screenshot">
+      </article>
+      <article class="bad">
+        <div><h2>Ramp, unusable capture</h2><a href="https://ramp.com">ramp.com</a></div>
+        <img src="ramp.png" alt="Ramp machine-readable capture">
+      </article>
+    </main>
+  </body>
+</html>
