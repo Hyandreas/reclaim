@@ -3,15 +3,12 @@ from __future__ import annotations
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
-import mimetypes
-from pathlib import Path
 import time
 from urllib.parse import parse_qs, unquote, urlparse
 
 from reclaim_core import (
     CORPUS_VERSION,
     DOCUMENTS,
-    ROOT,
     TARGET_RECOVERY,
     init_db,
     persist_run,
@@ -21,9 +18,7 @@ from reclaim_core import (
     stored_memo,
     stream_messages_for_run,
 )
-
-
-APP_DIR = ROOT / "app"
+from reclaim_keys import integration_status
 
 
 class ReclaimHandler(BaseHTTPRequestHandler):
@@ -48,6 +43,7 @@ class ReclaimHandler(BaseHTTPRequestHandler):
         query = parse_qs(parsed.query)
         try:
             if path in {"/api/health", "/health"}:
+                integrations = integration_status()
                 self.write_json(
                     {
                         "ok": True,
@@ -57,8 +53,11 @@ class ReclaimHandler(BaseHTTPRequestHandler):
                         "retrievalMode": "local deterministic vector mirror",
                         "objectStore": "local object-storage mirror",
                         "targetRecovery": TARGET_RECOVERY,
+                        "integrations": integrations["summary"],
                     }
                 )
+            elif path in {"/api/integrations", "/integrations"}:
+                self.write_json(integration_status())
             elif path in {"/api/portfolio", "/portfolio"}:
                 self.write_json(portfolio())
             elif path.startswith("/api/cases/") and path.endswith("/events"):
@@ -85,7 +84,7 @@ class ReclaimHandler(BaseHTTPRequestHandler):
                 fast = query.get("fast", ["0"])[0] == "1"
                 self.write_sse(run_id, fast=fast)
             else:
-                self.serve_static(path)
+                self.write_error(404, "unknown endpoint")
         except KeyError as exc:
             self.write_error(404, f"not found: {exc}")
         except ValueError as exc:
@@ -99,8 +98,8 @@ class ReclaimHandler(BaseHTTPRequestHandler):
                 run_id = persist_run()
                 self.write_json({"runId": run_id, "eventsUrl": f"/api/runs/{run_id}/events"})
             elif path.startswith("/cases/") and path.endswith("/run"):
-                persist_run()
                 case_id = unquote(path.split("/")[2])
+                persist_run([case_id])
                 self.write_json({"caseId": case_id, "eventsUrl": f"/cases/{case_id}/events"})
             elif path.startswith("/api/cases/") and path.endswith("/approve"):
                 case_id = unquote(path.split("/")[3])
@@ -187,23 +186,6 @@ class ReclaimHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
         self.close_connection = True
-
-    def serve_static(self, path: str) -> None:
-        if path == "/":
-            path = "/index.html"
-        safe_path = Path(unquote(path.lstrip("/")))
-        file_path = (APP_DIR / safe_path).resolve()
-        if not str(file_path).startswith(str(APP_DIR.resolve())) or not file_path.is_file():
-            self.write_error(404, "file not found")
-            return
-        content = file_path.read_bytes()
-        content_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
-        self.send_response(200)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(content)))
-        self.end_headers()
-        self.wfile.write(content)
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the Reclaim full-stack app")

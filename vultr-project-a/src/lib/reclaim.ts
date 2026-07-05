@@ -1,4 +1,4 @@
-import "../../app/data.js"
+import "../data/reclaim-data.js"
 
 declare global {
   interface Window {

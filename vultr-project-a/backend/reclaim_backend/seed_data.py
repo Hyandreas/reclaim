@@ -7,7 +7,7 @@ DOCUMENTS = {
     "sla-tier": {
         "title": "Northstar Telecom MSA - Service Level Exhibit",
         "page": "Exhibit B, page 14",
-        "asset": "app/assets/clause-sla-tier.svg",
+        "asset": "assets/clause-sla-tier.svg",
         "excerpt": (
             "If monthly availability falls below 99.9% and is at least 99.0%, "
             "customer receives a credit equal to 10% of the monthly recurring "
@@ -17,7 +17,7 @@ DOCUMENTS = {
     "maintenance-notice": {
         "title": "Northstar Telecom MSA - Maintenance Exclusions",
         "page": "Section 7.3, page 19",
-        "asset": "app/assets/clause-maintenance-notice.svg",
+        "asset": "assets/clause-maintenance-notice.svg",
         "excerpt": (
             "Scheduled maintenance is excluded only when carrier gives at least "
             "five business days of written notice and performs the work inside "
@@ -27,7 +27,7 @@ DOCUMENTS = {
     "claim-window": {
         "title": "Northstar Telecom MSA - Credit Claim Procedure",
         "page": "Section 9.1, page 22",
-        "asset": "app/assets/clause-claim-window.svg",
+        "asset": "assets/clause-claim-window.svg",
         "excerpt": (
             "Customer must submit service-credit claims within thirty calendar "
             "days after the end of the billing month."
@@ -36,7 +36,7 @@ DOCUMENTS = {
     "invoice-credit": {
         "title": "Northstar Invoice Extract - BAN 77104",
         "page": "June 2026 invoice, line 44",
-        "asset": "app/assets/clause-invoice-credit.svg",
+        "asset": "assets/clause-invoice-credit.svg",
         "excerpt": (
             "SLA service credit, circuit CKT-DEN-031, applied for June billing "
             "period."
@@ -284,4 +284,3 @@ PORTFOLIO_ROWS = [
     ("CKT-BUF-047", "18290", "Buffalo Elmwood", "credit owed", 1500),
     ("CKT-FRES-048", "31099", "Fresno River", "excluded", 0),
 ]
-

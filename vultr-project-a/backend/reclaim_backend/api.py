@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from reclaim_keys import integration_status
+
 from . import orchestrator, seed_data, storage
 
 
@@ -61,6 +63,8 @@ class ReclaimAPI:
         try:
             if method == "GET" and path == "/health":
                 return self._json(self.health())
+            if method == "GET" and path in {"/integrations", "/api/integrations"}:
+                return self._json(integration_status())
             if method == "GET" and path == "/cases":
                 return self._json(storage.list_cases(self.db_path))
             if method == "GET" and path == "/corpus":
@@ -114,13 +118,14 @@ class ReclaimAPI:
             },
             "objectStore": {
                 "status": "local",
-                "bucket": "app/assets",
+                "bucket": "public/reclaim/assets",
                 "note": "Vultr Object Storage adapter placeholder for local demo.",
             },
             "deployment": {
                 "mode": os.environ.get("RECLAIM_DEPLOY_MODE", "local"),
                 "providerTarget": "vultr-cloud-compute",
             },
+            "integrations": integration_status()["summary"],
         }
 
     def _handle_case_route(

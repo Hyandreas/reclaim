@@ -8,6 +8,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from reclaim_llm import llm_planner_event
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "backend" / "var" / "reclaim.sqlite"
@@ -391,7 +393,7 @@ def plan_for_case(case: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def rail_events_for_case(case: dict[str, Any]) -> list[dict[str, Any]]:
+def rail_events_for_case(case: dict[str, Any], allow_live_llm: bool = True) -> list[dict[str, Any]]:
     plan = plan_for_case(case)
     credit = credit_for_case(case)
     ticket_list = ", ".join(item["ticket"] for item in case["intervals"])
@@ -409,6 +411,7 @@ def rail_events_for_case(case: dict[str, Any]) -> list[dict[str, Any]]:
             "metric": " / ".join(plan["evidence"]),
             "payload": {"plan": plan},
         },
+        llm_planner_event(case, plan, credit, allow_live=allow_live_llm),
         {
             "id": "retrieve-logs",
             "kind": "retrieval",
@@ -582,9 +585,13 @@ def rail_events_for_case(case: dict[str, Any]) -> list[dict[str, Any]]:
     return stamped
 
 
-def memo_for_case(case: dict[str, Any]) -> dict[str, Any]:
+def memo_for_case(
+    case: dict[str, Any],
+    allow_live_llm: bool = True,
+    events: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     credit = credit_for_case(case)
-    events = rail_events_for_case(case)
+    events = events or rail_events_for_case(case, allow_live_llm=allow_live_llm)
     citations = []
     for citation_id in ["sla-tier", "maintenance-notice", "claim-window"]:
         if citation_id == "maintenance-notice" and not plan_for_case(case)["needsExclusion"]:
@@ -700,12 +707,13 @@ def init_db() -> None:
                 values(?, ?, ?)
                 on conflict(case_id) do update set payload = excluded.payload, memo = excluded.memo
                 """,
-                (case["id"], json.dumps(case), json.dumps(memo_for_case(case))),
+                (case["id"], json.dumps(case), json.dumps(memo_for_case(case, allow_live_llm=False))),
             )
 
 
-def persist_run() -> str:
+def persist_run(case_ids: list[str] | None = None) -> str:
     init_db()
+    selected_cases = LIVE_CASES if case_ids is None else [case_by_id(case_id) for case_id in case_ids]
     run_id = uuid.uuid4().hex
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
@@ -714,8 +722,18 @@ def persist_run() -> str:
         )
         conn.execute("delete from audit_events where run_id = ?", (run_id,))
         seq = 0
-        for case in LIVE_CASES:
-            for event in rail_events_for_case(case):
+        for case in selected_cases:
+            events = rail_events_for_case(case, allow_live_llm=True)
+            memo = memo_for_case(case, allow_live_llm=False, events=events)
+            conn.execute(
+                """
+                insert into cases(case_id, payload, memo)
+                values(?, ?, ?)
+                on conflict(case_id) do update set payload = excluded.payload, memo = excluded.memo
+                """,
+                (case["id"], json.dumps(case), json.dumps(memo)),
+            )
+            for event in events:
                 conn.execute(
                     """
                     insert into audit_events(run_id, case_id, seq, event_name, payload)
@@ -740,7 +758,7 @@ def stored_events_for_case(case_id: str) -> list[dict[str, Any]]:
             (case_id,),
         ).fetchone()
         if not latest:
-            return rail_events_for_case(case_by_id(case_id))
+            return rail_events_for_case(case_by_id(case_id), allow_live_llm=False)
         rows = conn.execute(
             """
             select payload from audit_events
@@ -760,7 +778,7 @@ def stored_memo(case_id: str) -> dict[str, Any]:
             "select payload from approvals where case_id = ? order by id desc limit 1",
             (case_id,),
         ).fetchone()
-    memo = json.loads(row[0]) if row else memo_for_case(case_by_id(case_id))
+    memo = json.loads(row[0]) if row else memo_for_case(case_by_id(case_id), allow_live_llm=False)
     if approval:
         memo["approval"] = json.loads(approval[0])
     return memo

@@ -27,32 +27,32 @@
 
 :root {
   color-scheme: light;
-  --background: oklch(97.6% 0.006 248);
-  --foreground: oklch(20.8% 0.018 248);
+  --background: oklch(97.8% 0.004 248);
+  --foreground: oklch(18.8% 0.014 248);
   --card: oklch(99% 0.004 248);
   --card-foreground: oklch(20.8% 0.018 248);
   --popover: oklch(99% 0.004 248);
   --popover-foreground: oklch(20.8% 0.018 248);
-  --primary: oklch(48.5% 0.145 252);
+  --primary: oklch(47.5% 0.145 252);
   --primary-foreground: oklch(98% 0.006 248);
   --secondary: oklch(94.8% 0.009 248);
   --secondary-foreground: oklch(25% 0.018 248);
   --muted: oklch(95.2% 0.008 248);
-  --muted-foreground: oklch(50% 0.014 248);
+  --muted-foreground: oklch(45% 0.012 248);
   --accent: oklch(94.6% 0.028 252);
   --accent-foreground: oklch(26% 0.055 252);
   --destructive: oklch(56% 0.18 28);
   --destructive-foreground: oklch(98% 0.01 28);
-  --border: oklch(87.4% 0.012 248);
-  --input: oklch(86.8% 0.012 248);
+  --border: oklch(85.8% 0.01 248);
+  --input: oklch(84.8% 0.01 248);
   --ring: oklch(54% 0.14 252);
   --panel: oklch(98.5% 0.005 248);
   --panel-rail: oklch(93.6% 0.011 248);
   --stage: oklch(99.8% 0.002 248);
   --stage-tint: oklch(97.3% 0.012 248);
-  --context: oklch(95.7% 0.008 248);
-  --context-deep: oklch(92.8% 0.01 248);
-  --line-soft: oklch(90.8% 0.01 248);
+  --context: oklch(95.4% 0.007 248);
+  --context-deep: oklch(92.4% 0.009 248);
+  --line-soft: oklch(89.5% 0.009 248);
   --citation: oklch(53.5% 0.135 238);
   --neutral-route: oklch(60% 0.012 248);
   --warning: oklch(69% 0.12 78);
@@ -66,7 +66,7 @@
   /* Elevation — soft, cool-tinted depth. Reserved for surfaces, not decoration. */
   --shadow-xs: 0 1px 1px oklch(24% 0.03 248 / 0.04);
   --shadow-sm: 0 1px 2px oklch(24% 0.03 248 / 0.06), 0 1px 1px oklch(24% 0.03 248 / 0.04);
-  --shadow-md: 0 2px 4px oklch(24% 0.03 248 / 0.06), 0 6px 16px oklch(24% 0.03 248 / 0.08);
+  --shadow-md: 0 2px 4px oklch(24% 0.03 248 / 0.05), 0 8px 18px oklch(24% 0.03 248 / 0.07);
   --shadow-lg: 0 8px 24px oklch(22% 0.03 248 / 0.12), 0 2px 6px oklch(22% 0.03 248 / 0.08);
   --primary-hover: oklch(43% 0.14 252);
 
@@ -114,7 +114,7 @@ body {
   font-feature-settings: "cv05", "cv08", "ss01", "tnum";
   font-optical-sizing: auto;
   line-height: 1.5;
-  letter-spacing: -0.006em;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -210,8 +210,9 @@ button {
   align-items: center;
   gap: var(--sp-3);
   border-bottom: 1px solid var(--border);
-  background: var(--stage);
+  background: color-mix(in oklch, var(--stage) 94%, var(--context));
   padding: 0 var(--sp-3);
+  box-shadow: 0 1px 0 oklch(100% 0 0 / 0.74);
 }
 
 .toolbar-brand,
@@ -236,8 +237,9 @@ button {
   width: 1.875rem;
   height: 1.875rem;
   place-items: center;
+  border: 1px solid color-mix(in oklch, var(--primary) 28%, var(--border));
   border-radius: var(--radius);
-  background: var(--primary);
+  background: color-mix(in oklch, var(--primary) 92%, oklch(20% 0.01 248));
   color: oklch(99% 0.006 248);
   font-size: var(--fs-13);
   font-weight: var(--fw-strong);
@@ -340,14 +342,15 @@ button {
 }
 
 .run-audit-button {
-  background: var(--primary);
+  background: var(--foreground);
   color: oklch(99% 0.006 248);
   font-weight: var(--fw-value);
+  box-shadow: var(--shadow-sm);
   transition: background 150ms var(--ease-out), transform 120ms var(--ease-out);
 }
 
 .run-audit-button:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: color-mix(in oklch, var(--foreground) 88%, var(--primary));
 }
 
 .run-audit-button:active:not(:disabled) {
@@ -403,7 +406,7 @@ button {
   align-items: center;
   gap: var(--sp-1);
   border-right: 1px solid var(--border);
-  background: var(--context-deep);
+  background: color-mix(in oklch, var(--context-deep) 82%, var(--background));
   padding: var(--sp-2) var(--sp-1);
 }
 
@@ -428,12 +431,14 @@ button {
 .rail-button:hover {
   background: var(--stage);
   color: var(--foreground);
+  border-color: var(--border);
 }
 
 .rail-button.is-active {
   border-color: color-mix(in oklch, var(--primary) 24%, var(--border));
   background: var(--stage);
   color: var(--primary);
+  box-shadow: var(--shadow-xs);
 }
 
 .explorer-pane,
@@ -453,11 +458,11 @@ button {
 }
 
 .explorer-pane {
-  background: var(--context);
+  background: color-mix(in oklch, var(--context) 88%, var(--background));
 }
 
 .inspector-pane {
-  background: color-mix(in oklch, var(--context) 82%, var(--stage));
+  background: color-mix(in oklch, var(--context) 76%, var(--stage));
 }
 
 .editor-pane {
@@ -527,7 +532,7 @@ button {
   flex: 0 0 auto;
   align-items: center;
   gap: var(--sp-2);
-  min-height: 32px;
+  min-height: 34px;
   margin: var(--sp-2) var(--sp-3);
   border: 1px solid var(--input);
   border-radius: var(--radius);
@@ -584,7 +589,7 @@ button {
   cursor: pointer;
   padding: var(--sp-2) var(--sp-3);
   text-align: left;
-  transition: background-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+  transition: background-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out), opacity 150ms var(--ease-out);
 }
 
 .case-inbox-row:hover {
@@ -592,13 +597,13 @@ button {
 }
 
 .case-inbox-row.is-selected {
-  background: color-mix(in oklch, var(--accent) 34%, var(--stage));
-  box-shadow: inset 2px 0 0 var(--primary);
+  background: color-mix(in oklch, var(--accent) 52%, var(--stage));
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--primary) 32%, var(--border));
 }
 
 .case-inbox-row.is-muted {
   cursor: default;
-  opacity: 0.5;
+  opacity: 0.62;
 }
 
 .case-row-status {
@@ -710,7 +715,7 @@ button {
   gap: var(--sp-4);
   min-height: 36px;
   border-bottom: 1px solid var(--border);
-  background: color-mix(in oklch, var(--stage) 84%, var(--stage-tint));
+  background: color-mix(in oklch, var(--stage) 72%, var(--context));
   padding: 0 var(--sp-3);
 }
 
@@ -748,7 +753,7 @@ button {
   gap: var(--sp-3);
   align-items: center;
   flex: 0 0 auto;
-  min-height: 60px;
+  min-height: 64px;
   border-bottom: 1px solid var(--border);
   background: var(--stage);
   padding: var(--sp-2) var(--sp-3);
@@ -797,6 +802,7 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   height: 1.75rem;
   width: 100%;
+  border: 1px solid var(--border);
   background: color-mix(in oklch, var(--context) 76%, var(--line-soft));
   padding: 2px;
 }
@@ -824,11 +830,11 @@ button {
   align-items: center;
   flex: 0 0 auto;
   margin: var(--sp-3) var(--sp-3) var(--sp-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--primary);
+  border: 1px solid color-mix(in oklch, var(--primary) 34%, var(--border));
   border-radius: var(--radius-panel);
-  background: var(--stage-tint);
+  background: color-mix(in oklch, var(--accent) 32%, var(--stage));
   padding: var(--sp-3) var(--sp-4);
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.72);
 }
 
 .decision-copy {
@@ -913,7 +919,7 @@ button {
   gap: var(--sp-3);
   flex: 0 0 auto;
   border-bottom: 1px solid var(--line-soft);
-  background: transparent;
+  background: color-mix(in oklch, var(--stage) 86%, var(--context));
   padding: var(--sp-1) var(--sp-3);
   color: color-mix(in oklch, var(--muted-foreground) 82%, var(--border));
   font-size: var(--fs-11);
@@ -931,28 +937,6 @@ button {
   background: var(--stage);
   padding: var(--sp-3);
   transition: background-color 150ms var(--ease-out);
-  animation: trace-in 240ms var(--ease-out) both;
-}
-
-/* Staggered reveal — reads as the agent working the case step by step. */
-.trace-row:nth-child(1) { animation-delay: 0ms; }
-.trace-row:nth-child(2) { animation-delay: 28ms; }
-.trace-row:nth-child(3) { animation-delay: 56ms; }
-.trace-row:nth-child(4) { animation-delay: 84ms; }
-.trace-row:nth-child(5) { animation-delay: 112ms; }
-.trace-row:nth-child(6) { animation-delay: 140ms; }
-.trace-row:nth-child(7) { animation-delay: 168ms; }
-.trace-row:nth-child(8) { animation-delay: 196ms; }
-
-@keyframes trace-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .trace-row:hover {
@@ -960,7 +944,7 @@ button {
 }
 
 .trace-row[data-kind="skip"] {
-  background: color-mix(in oklch, var(--context) 56%, var(--stage));
+  background: color-mix(in oklch, var(--context) 66%, var(--stage));
 }
 
 .trace-row[data-kind="tool"] .trace-metric,
@@ -1125,8 +1109,9 @@ button {
   margin: var(--sp-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-panel);
-  background: color-mix(in oklch, var(--context) 42%, var(--stage));
+  background: color-mix(in oklch, var(--context) 32%, var(--stage));
   padding: var(--sp-3);
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.64);
 }
 
 .formula-line {
@@ -1228,6 +1213,7 @@ button {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--stage);
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.62);
 }
 
 .receipt-row {

@@ -3,18 +3,48 @@
 Stdlib Python backend for the complete Reclaim local app. No FastAPI or external
 packages are required.
 
-## Primary full-stack server
+## API server
 
-Use this path for the app you should demo:
+Use this path for the backend API:
 
 ```sh
 cd vultr-project-a
 python3 backend/server.py --host 127.0.0.1 --port 8765
 ```
 
-Open `http://127.0.0.1:8765/`. This server hosts `app/`, persists runs and
-approvals in `backend/var/reclaim.sqlite`, and supports the `/api/*` aliases
-used by Docker/Vultr-style deployments.
+Open the frontend separately at `http://127.0.0.1:5173/`.
+
+The `8765` server is API-only. It persists runs and approvals in
+`backend/var/reclaim.sqlite`, and supports the `/api/*` aliases used by
+Docker/Vultr-style deployments. It has no static frontend fallback.
+
+## Credentials
+
+The backend can load optional provider keys from `../.env`; copy
+`../.env.example` to `../.env` and fill the values when credentials are ready.
+Secrets remain server-side. The frontend only receives configured/missing
+metadata from `GET /api/integrations`.
+
+`POST /cases/{case_id}/run` uses Vultr Serverless Inference when
+`VULTR_SERVERLESS_INFERENCE_API_KEY` is configured. The model receives
+server-side audit tool definitions, calls those tools, then writes a bounded
+planner-note trace event from the tool results. Deterministic tools still own
+uptime, credit math, classification, citations, and approval rules.
+
+Expected future live variables:
+
+- `VULTR_API_KEY`
+- `VULTR_SERVERLESS_INFERENCE_API_KEY`
+- `VULTR_SERVERLESS_INFERENCE_BASE_URL`
+- `VULTR_SERVERLESS_INFERENCE_MODEL`
+- `VULTR_OBJECT_STORAGE_ACCESS_KEY`
+- `VULTR_OBJECT_STORAGE_SECRET_KEY`
+- `VULTR_OBJECT_STORAGE_ENDPOINT`
+- `VULTR_OBJECT_STORAGE_BUCKET`
+- `DATABASE_URL`
+
+Keep `VULTR_SERVERLESS_INFERENCE_MODEL=kimi-k2-instruct` for this tool-calling
+path; other Vultr inference models may not return tool calls.
 
 ## Package backend
 
@@ -31,6 +61,7 @@ storage, and approval storage.
 ## Endpoints
 
 - `GET /health`
+- `GET /integrations`
 - `GET /cases`
 - `GET /corpus`
 - `POST /run-portfolio`

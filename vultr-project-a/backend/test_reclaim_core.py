@@ -1,6 +1,8 @@
 import unittest
 from pathlib import Path
+import os
 import sys
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -19,9 +21,23 @@ from reclaim_core import (
 
 
 class ReclaimCoreTests(unittest.TestCase):
+    def setUp(self):
+        self.env_patch = patch.dict(
+            os.environ,
+            {
+                "RECLAIM_ENV_FILE": "",
+                "VULTR_SERVERLESS_INFERENCE_API_KEY": "",
+            },
+        )
+        self.env_patch.start()
+
+    def tearDown(self):
+        self.env_patch.stop()
+
     def test_deep_case_triggers_exclusion_retrieval(self):
         events = rail_events_for_case(case_by_id("CKT-ATL-014"))
         names = [event["eventName"] for event in events]
+        self.assertIn("llm.planner_note.skipped", names)
         self.assertIn("exclusion_review.retrieved", names)
         self.assertIn("billing_crosscheck.skipped", names)
 

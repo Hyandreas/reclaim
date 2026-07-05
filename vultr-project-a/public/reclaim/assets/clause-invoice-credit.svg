@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="title desc">
+  <title id="title">Highlighted invoice credit line</title>
+  <desc id="desc">A pre-rendered invoice extract highlighting a prior SLA service credit.</desc>
+  <rect width="900" height="560" fill="#fffaf0"/>
+  <rect x="44" y="40" width="812" height="480" rx="10" fill="#ffffff" stroke="#d8d0c1" stroke-width="2"/>
+  <text x="80" y="88" font-family="Georgia, serif" font-size="30" fill="#1f2422">Northstar Invoice Extract</text>
+  <text x="80" y="120" font-family="Menlo, monospace" font-size="14" fill="#6a716d">BAN 77104 - June 2026 Invoice - Line 44</text>
+  <line x1="80" y1="145" x2="820" y2="145" stroke="#d8d0c1" stroke-width="2"/>
+  <text x="90" y="190" font-family="Menlo, monospace" font-size="15" fill="#6a716d">Line</text>
+  <text x="185" y="190" font-family="Menlo, monospace" font-size="15" fill="#6a716d">Description</text>
+  <text x="720" y="190" font-family="Menlo, monospace" font-size="15" fill="#6a716d">Amount</text>
+  <rect x="78" y="214" width="744" height="72" rx="8" fill="#f7e3c2" stroke="#a96115" stroke-width="2"/>
+  <text x="100" y="258" font-family="Menlo, monospace" font-size="19" fill="#1f2422">44</text>
+  <text x="185" y="258" font-family="Menlo, monospace" font-size="19" fill="#1f2422">SLA service credit - CKT-DEN-031 - June period</text>
+  <text x="720" y="258" font-family="Menlo, monospace" font-size="19" fill="#1f2422">-$1,840</text>
+  <text x="80" y="360" font-family="Avenir Next, Trebuchet MS, sans-serif" font-size="17" fill="#3d413f">Billing cross-check excludes this case from recoverable exposure to prevent double-counting.</text>
+  <text x="80" y="455" font-family="Menlo, monospace" font-size="13" fill="#6a716d">Citation id: invoice-credit</text>
+</svg>

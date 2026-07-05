@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from reclaim_llm import llm_planner_event
+
 from . import seed_data, storage
 
 
@@ -239,6 +241,7 @@ def build_trace(
                 "branchDecisions": plan["branchDecisions"],
             },
         },
+        llm_planner_event(item, plan, credit),
         {
             "id": "retrieve-logs",
             "kind": "retrieval",
@@ -450,7 +453,7 @@ def build_trace(
 
     for seq, event in enumerate(events):
         event["seq"] = seq
-        event["eventName"] = event_names.get(event["id"], event["id"])
+        event.setdefault("eventName", event_names.get(event["id"], event["id"]))
         event["at"] = f"{DEMO_EVENT_START}:{seq:02d}.000Z"
         event.setdefault("citationIds", [])
     return events
@@ -658,4 +661,3 @@ def record_approval(
 
 def slug(value: str) -> str:
     return "".join(ch if ch.isalnum() else "-" for ch in value.lower()).strip("-")
-

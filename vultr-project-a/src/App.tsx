@@ -49,6 +49,13 @@ import {
 type BackendMode = "checking" | "live" | "fallback"
 type MobilePane = "queue" | "evidence" | "packet"
 
+type IntegrationSummary = {
+  configured: number
+  total: number
+  missing: string[]
+  mode: "configured" | "partial" | "local"
+}
+
 const API_BASE =
   (import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL ||
   (window.location.port === "8765" ? "" : "http://127.0.0.1:8765")
@@ -89,6 +96,7 @@ function App() {
   const [running, setRunning] = useState(false)
   const [backendMode, setBackendMode] = useState<BackendMode>("checking")
   const [backendLabel, setBackendLabel] = useState("Checking backend")
+  const [integrationSummary, setIntegrationSummary] = useState<IntegrationSummary | null>(null)
   const [selectedCitation, setSelectedCitation] = useState<string | null>(null)
   const [formError, setFormError] = useState("")
   const [mobilePane, setMobilePane] = useState<MobilePane>("evidence")
@@ -111,13 +119,16 @@ function App() {
         const retrievalIndex = typeof health.retrievalIndex === "object" && health.retrievalIndex
           ? health.retrievalIndex as { corpusVersion?: unknown }
           : null
+        const integrations = normalizeIntegrationSummary(health.integrations)
         const corpus = String(health.corpusVersion || retrievalIndex?.corpusVersion || "corpus-v7")
         setBackendMode("live")
-        setBackendLabel(`Vultr Compute live / Object Storage receipts / ${corpus} / audit DB`)
+        setIntegrationSummary(integrations)
+        setBackendLabel(`Vultr Compute live / ${corpus} / audit DB`)
       })
       .catch(() => {
         if (!active) return
         setBackendMode("fallback")
+        setIntegrationSummary(null)
         setBackendLabel("Local deterministic fallback")
       })
     return () => {
@@ -239,6 +250,7 @@ function App() {
         <div className="toolbar-proof" aria-label="Deployment proof">
           <span>Deployed on Vultr</span>
           <span>Vector receipts</span>
+          <span>{keyStatusLabel(integrationSummary)}</span>
           <span>{rows.length} imported circuits</span>
         </div>
 
@@ -450,6 +462,7 @@ function App() {
         backendLabel={backendLabel}
         backendMode={backendMode}
         formError={formError}
+        integrationSummary={integrationSummary}
         receiptCount={sourceReceiptCount}
         running={running}
         selectedCaseId={selectedCase.id}
@@ -536,8 +549,10 @@ function MobilePaneButton({
 
 function StatusBar({
   approval,
+  backendLabel,
   backendMode,
   formError,
+  integrationSummary,
   receiptCount,
   running,
   selectedCaseId,
@@ -546,6 +561,7 @@ function StatusBar({
   backendLabel: string
   backendMode: BackendMode
   formError: string
+  integrationSummary: IntegrationSummary | null
   receiptCount: number
   running: boolean
   selectedCaseId: string
@@ -561,11 +577,36 @@ function StatusBar({
   return (
     <footer className="statusbar">
       <span>{stackLabel}</span>
+      <span>{backendLabel}</span>
+      <span>{keyStatusLabel(integrationSummary)}</span>
       <span>{selectedCaseId}</span>
       <span>{receiptCount} receipts</span>
       <strong>{state}</strong>
     </footer>
   )
+}
+
+function normalizeIntegrationSummary(value: unknown): IntegrationSummary | null {
+  if (!value || typeof value !== "object") return null
+  const payload = value as Partial<IntegrationSummary>
+  const configured = Number(payload.configured)
+  const total = Number(payload.total)
+  const mode = payload.mode === "configured" || payload.mode === "partial" || payload.mode === "local"
+    ? payload.mode
+    : "local"
+  return {
+    configured: Number.isFinite(configured) ? configured : 0,
+    total: Number.isFinite(total) ? total : 0,
+    missing: Array.isArray(payload.missing) ? payload.missing.map(String) : [],
+    mode,
+  }
+}
+
+function keyStatusLabel(summary: IntegrationSummary | null) {
+  if (!summary || summary.total === 0) return "Keys pending"
+  if (summary.mode === "configured") return "Keys ready"
+  if (summary.configured > 0) return `${summary.configured}/${summary.total} key sets`
+  return "Keys pending"
 }
 
 function CaseInboxRow({ row, selected, onSelect }: { row: PortfolioRow; selected: boolean; onSelect: () => void }) {
@@ -779,7 +820,7 @@ function CitationSheet({
               <strong>{supportLine}</strong>
             </div>
             <div className="receipt-document">
-              <img src={`/app/${doc.asset}`} alt={`Highlighted clause from ${doc.title}`} />
+              <img src={`/reclaim/${doc.asset}`} alt={`Highlighted clause from ${doc.title}`} />
               <div>
                 <PacketField label="Location" value={doc.page} />
                 <PacketField label="Cited text" value={doc.excerpt} />

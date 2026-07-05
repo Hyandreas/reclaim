@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="title desc">
+  <title id="title">Highlighted maintenance notice clause</title>
+  <desc id="desc">A pre-rendered source image highlighting the five business day maintenance notice rule.</desc>
+  <rect width="900" height="560" fill="#fffaf0"/>
+  <rect x="44" y="40" width="812" height="480" rx="10" fill="#ffffff" stroke="#d8d0c1" stroke-width="2"/>
+  <text x="80" y="88" font-family="Georgia, serif" font-size="30" fill="#1f2422">Northstar Telecom MSA</text>
+  <text x="80" y="120" font-family="Menlo, monospace" font-size="14" fill="#6a716d">Section 7.3 - Maintenance Exclusions - Page 19</text>
+  <line x1="80" y1="145" x2="820" y2="145" stroke="#d8d0c1" stroke-width="2"/>
+  <text x="80" y="190" font-family="Avenir Next, Trebuchet MS, sans-serif" font-size="18" fill="#1f2422">Scheduled Maintenance</text>
+  <rect x="78" y="216" width="744" height="120" rx="8" fill="#f7e3c2" stroke="#a96115" stroke-width="2"/>
+  <text x="102" y="252" font-family="Avenir Next, Trebuchet MS, sans-serif" font-size="20" fill="#1f2422">Scheduled maintenance is excluded only when Carrier gives</text>
+  <text x="102" y="284" font-family="Avenir Next, Trebuchet MS, sans-serif" font-size="20" fill="#1f2422">at least five business days of written notice and performs</text>
+  <text x="102" y="316" font-family="Avenir Next, Trebuchet MS, sans-serif" font-size="20" fill="#1f2422">the work inside the approved maintenance window.</text>
+  <text x="80" y="388" font-family="Avenir Next, Trebuchet MS, sans-serif" font-size="17" fill="#3d413f">If notice evidence is missing, downtime is counted unless another exclusion applies.</text>
+  <text x="80" y="455" font-family="Menlo, monospace" font-size="13" fill="#6a716d">Citation id: maintenance-notice</text>
+</svg>

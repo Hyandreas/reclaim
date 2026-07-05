@@ -4,8 +4,7 @@ services:
     ports:
       - "8765:8765"
     volumes:
-      - reclaim-data:/app/backend/var
+      - reclaim-data:/srv/reclaim/backend/var
 
 volumes:
   reclaim-data:
-

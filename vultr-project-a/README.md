@@ -18,22 +18,64 @@ Reclaim is a web-based enterprise agent for telecom SLA credit recovery. It read
 - [DESIGN_BRIEF.md](DESIGN_BRIEF.md) - UI states, interaction beats, demo-screen requirements.
 - [JUDGE_RISK_REGISTER.md](JUDGE_RISK_REGISTER.md) - skeptical judge objections and required counterproof.
 - [SOURCES.md](SOURCES.md) - local source files and current Vultr documentation checked for stack claims.
-- [app/](app/) - the operational web console.
+- [src/](src/) - the Vite/React operational web console and demo data.
+- [public/reclaim/assets/](public/reclaim/assets/) - citation highlight SVGs used by the source receipt sheet.
 - [backend/](backend/) - stdlib Python API, SQLite persistence, deterministic tools, SSE streams, memos, and approval storage.
 
 ## Run The Full App
+
+Terminal 1, API backend:
 
 ```sh
 cd vultr-project-a
 python3 backend/server.py --host 127.0.0.1 --port 8765
 ```
 
-Open `http://127.0.0.1:8765/`.
+Terminal 2, frontend:
 
-Smoke-test URL:
+```sh
+cd vultr-project-a
+npm run dev
+```
+
+Open `http://127.0.0.1:5173/`.
+
+The backend on `8765` is API-only. There is no static frontend directory in this repo.
+
+## API Keys
+
+Keys are optional for the local deterministic demo. To prepare a live Vultr-backed
+run later, copy `.env.example` to `.env` and fill the blank values. Real `.env`
+files are ignored by Git.
+
+The backend loads `.env` with stdlib-only parsing and exposes only readiness
+metadata at `/api/integrations`; it never returns secret values to the frontend.
+When `VULTR_SERVERLESS_INFERENCE_API_KEY` is present, `Run audit` calls Vultr's
+chat-completions endpoint with tool calling enabled. The model must call
+server-side audit tools before writing its planner note, and the trace records
+which tools were used. Math, classification, citations, and approval safety
+remain deterministic.
+
+Required live integration variables:
+
+- `VULTR_API_KEY`
+- `VULTR_SERVERLESS_INFERENCE_API_KEY`
+- `VULTR_SERVERLESS_INFERENCE_BASE_URL`
+- `VULTR_SERVERLESS_INFERENCE_MODEL`
+- `VULTR_OBJECT_STORAGE_ACCESS_KEY`
+- `VULTR_OBJECT_STORAGE_SECRET_KEY`
+- `VULTR_OBJECT_STORAGE_ENDPOINT`
+- `VULTR_OBJECT_STORAGE_BUCKET`
+- `DATABASE_URL`
+
+Keep `VULTR_SERVERLESS_INFERENCE_MODEL=kimi-k2-instruct` for the tool-calling
+path; other Vultr inference models may not return tool calls.
+
+API smoke check:
 
 ```text
-http://127.0.0.1:8765/?smoke
+http://127.0.0.1:8765/health
+http://127.0.0.1:8765/api/integrations
 ```
 
 Docker/Vultr-shaped local run:
