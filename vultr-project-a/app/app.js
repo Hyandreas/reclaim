@@ -45,6 +45,7 @@
     backendMode: "checking",
     backendReason: "Checking backend",
     backendHealth: null,
+    backendTargetRecovery: null,
     backendChecked: false,
     backendCheckPromise: null,
     stream: null
@@ -75,6 +76,14 @@
       live: false
     }))
   ];
+
+  function calculatedExposure() {
+    return allRows.reduce((sum, row) => sum + row.amount, 0);
+  }
+
+  function getTargetRecovery() {
+    return Number.isFinite(state.backendTargetRecovery) ? state.backendTargetRecovery : calculatedExposure();
+  }
 
   class BackendHttpError extends Error {
     constructor(response, bodyText) {
@@ -154,15 +163,38 @@
   function setBackendMode(mode, reason, health) {
     state.backendMode = mode;
     state.backendReason = reason || "";
-    if (health !== undefined) state.backendHealth = health;
+    if (health !== undefined) {
+      state.backendHealth = health;
+      const liveTarget = health && Number(health.targetRecovery);
+      state.backendTargetRecovery = Number.isFinite(liveTarget) && liveTarget > 0 ? liveTarget : null;
+    }
     renderTransportLabels();
+  }
+
+  function buildHealthLabel(health) {
+    if (!health || typeof health !== "object") return "Live backend";
+    const parts = [];
+    const deployment = health.deployment;
+    if (deployment === "vultr") parts.push("Vultr Compute live");
+    else if (deployment === "local") parts.push("Local server");
+
+    const plannerMode = health.planner && health.planner.mode;
+    if (plannerMode === "vultr") parts.push("Planner: Nemotron on Vultr Inference");
+    else if (plannerMode === "nvidia") parts.push("Planner: NVIDIA Nemotron");
+    else if (plannerMode === "rules") parts.push("Planner: deterministic rules");
+
+    const retrievalMode = health.retrieval && health.retrieval.mode;
+    if (retrievalMode === "vultr-embeddings") parts.push("Retrieval: Vultr embeddings");
+    else if (retrievalMode === "local-tfidf") parts.push("Retrieval: local index");
+
+    return parts.length ? parts.join(" / ") : "Live backend";
   }
 
   function renderTransportLabels() {
     if (refs.modePill) {
       const labels = {
         checking: "Checking backend",
-        backend: "Live backend",
+        backend: buildHealthLabel(state.backendHealth),
         fallback: "Local fallback",
         replay: "Golden replay",
         error: "Backend error"
@@ -705,6 +737,7 @@
         <p class="rail-detail">${escapeHtml(event.detail)}</p>
         <div class="rail-card-foot">
           <strong>${escapeHtml(event.metric)}</strong>
+          ${event.provenance ? `<span class="event-status">${escapeHtml(event.provenance)}</span>` : ""}
           <div class="citation-chips">
             ${(event.citationIds || []).map((id) => citationChip(id)).join("")}
           </div>
@@ -733,7 +766,7 @@
       mrc: item.mrc,
       tickets: item.intervals.map((row) => row.ticket),
       amount: credit.recoverableAmount,
-      totalRecovery: data.targetRecovery,
+      totalRecovery: getTargetRecovery(),
       availability: `${formatPercent(credit.uptime)} actual vs ${item.slaTarget}% target`,
       exclusionDecision: credit.counted[0].reason,
       deadline: `${item.claimDaysLeft} days left to file`,
@@ -952,7 +985,7 @@
       await streamBackendEvents(caseId);
       await fetchBackendMemo(caseId);
       const memo = state.memo || buildLocalMemo(getSelectedCase());
-      const total = Number(memo.totalRecovery) || data.targetRecovery;
+      const total = Number(memo.totalRecovery) || getTargetRecovery();
       animateCounter(total, 900);
       await sleep(950);
       state.currentTotal = total;
@@ -1026,6 +1059,7 @@
         "case.classified",
         "memo.assembled",
         "human_approval.recorded",
+        "counter.update",
         "done"
       ];
 
@@ -1060,6 +1094,15 @@
         if (payload.done) {
           window.clearTimeout(timeout);
           finish();
+          return;
+        }
+
+        if (/counter\.update/i.test(eventName || "") || payload.type === "counter.update") {
+          const liveAmount = firstNumber(payload.amount, payload.total, payload.value, payload.targetRecovery, payload.recoverable_total);
+          if (liveAmount > 0) {
+            state.backendTargetRecovery = liveAmount;
+            animateCounter(liveAmount, 400);
+          }
           return;
         }
 
@@ -1135,6 +1178,7 @@
     const detail = source.detail || source.output_summary || source.message || source.summary || source.skipped_reason || compactValue(source.output) || "Backend event received.";
     const metric = source.metric || source.inputs_summary || source.input_summary || compactValue(source.metric_json) || compactValue(source.inputs) || "Persisted audit event";
     const status = source.status || source.classification || inferBackendStatus(stage, source);
+    const provenance = describeEventProvenance(payload, source);
 
     return {
       id: source.id || source.event_id || slug(stage),
@@ -1144,9 +1188,31 @@
       detail,
       metric,
       citationIds,
+      provenance,
       eventName: stage,
       at: source.at || source.timestamp || new Date().toISOString()
     };
+  }
+
+  function describeEventProvenance(payload, source) {
+    const plan = payload.plan || source.plan;
+    const plannerSource = plan && plan.plannerSource;
+    if (plannerSource) return plannerProvenanceLabel(plannerSource);
+
+    const retrieval = payload.retrieval || source.retrieval;
+    if (retrieval && retrieval.mode) {
+      const modeLabel = retrieval.mode === "vultr-embeddings" ? "Vultr embeddings" : retrieval.mode === "local-tfidf" ? "local index" : retrieval.mode;
+      const topScore = Number(retrieval.topScore);
+      return Number.isFinite(topScore) ? `match ${topScore.toFixed(2)} · ${modeLabel}` : modeLabel;
+    }
+
+    return "";
+  }
+
+  function plannerProvenanceLabel(source) {
+    if (source === "vultr") return "via Vultr Nemotron";
+    if (source === "nvidia") return "via NVIDIA Nemotron";
+    return "rules fallback";
   }
 
   function normalizeBackendMemo(payload, caseId) {
@@ -1388,10 +1454,11 @@
     await sleep(mode === "replay" ? 200 : 550);
 
     state.memoReady = true;
-    animateCounter(data.targetRecovery, mode === "replay" ? 500 : 1500);
+    const targetRecovery = getTargetRecovery();
+    animateCounter(targetRecovery, mode === "replay" ? 500 : 1500);
     await sleep(mode === "replay" ? 550 : 1600);
-    state.currentTotal = data.targetRecovery;
-    refs.moneyCounter.textContent = formatCurrency(data.targetRecovery);
+    state.currentTotal = targetRecovery;
+    refs.moneyCounter.textContent = formatCurrency(targetRecovery);
     stopTimer(mode === "replay" ? "trace" : "00:12");
     state.running = false;
     refs.runButton.disabled = false;
@@ -1549,7 +1616,7 @@
     await handleApproval("approve");
     openCitation("sla-tier");
     const citationOpened = refs.citationDrawer.classList.contains("is-open");
-    const counterReached = refs.moneyCounter.textContent === formatCurrency(data.targetRecovery);
+    const counterReached = refs.moneyCounter.textContent === formatCurrency(getTargetRecovery());
     const modeVisible = /(Live backend|Local fallback|Golden replay)/.test(refs.modePill?.textContent || "");
     const approvalRecorded = Boolean(state.approval);
 
@@ -1594,10 +1661,8 @@
     if (event.key === "Escape") closeCitation();
   });
 
-  if (Number.isFinite(Number(data.targetRecovery))) {
-    state.currentTotal = Number(data.targetRecovery);
-    refs.moneyCounter.textContent = formatCurrency(state.currentTotal);
-  }
+  state.currentTotal = getTargetRecovery();
+  refs.moneyCounter.textContent = formatCurrency(state.currentTotal);
 
   renderAll();
   ensureBackendChecked().then(() => {

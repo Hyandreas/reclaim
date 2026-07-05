@@ -33,15 +33,18 @@ import {
   allRows,
   calculatedExposure,
   creditForCase,
+  describeBackendLabel,
   formatCurrency,
   localMemo,
   localTrace,
   normalizeBackendEvent,
+  parseHealthSnapshot,
   reclaimData,
   slug,
   type ApprovalRecord,
   type ClaimMemo,
   type DocumentReceipt,
+  type HealthSnapshot,
   type PortfolioRow,
   type TraceEvent,
 } from "@/lib/reclaim"
@@ -77,7 +80,9 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 function App() {
   const rows = useMemo(() => allRows(), [])
   const exposure = useMemo(() => calculatedExposure(), [])
-  const headlineRecovery = reclaimData.targetRecovery || exposure
+  const [targetRecovery, setTargetRecovery] = useState(exposure)
+  const headlineRecovery = targetRecovery
+  const [healthSnapshot, setHealthSnapshot] = useState<HealthSnapshot>({})
   const [selectedCaseId, setSelectedCaseId] = useState(reclaimData.liveCases[0].id)
   const selectedCase = reclaimData.liveCases.find((item) => item.id === selectedCaseId) || reclaimData.liveCases[0]
   const selectedCredit = creditForCase(selectedCase)
@@ -108,22 +113,23 @@ function App() {
     requestJson<Record<string, unknown>>("/health")
       .then((health) => {
         if (!active) return
-        const retrievalIndex = typeof health.retrievalIndex === "object" && health.retrievalIndex
-          ? health.retrievalIndex as { corpusVersion?: unknown }
-          : null
-        const corpus = String(health.corpusVersion || retrievalIndex?.corpusVersion || "corpus-v7")
+        const snapshot = parseHealthSnapshot(health)
         setBackendMode("live")
-        setBackendLabel(`Vultr Compute live / Object Storage receipts / ${corpus} / audit DB`)
+        setBackendLabel(describeBackendLabel(snapshot))
+        setHealthSnapshot(snapshot)
+        setTargetRecovery(snapshot.targetRecovery ?? exposure)
       })
       .catch(() => {
         if (!active) return
         setBackendMode("fallback")
         setBackendLabel("Local deterministic fallback")
+        setHealthSnapshot({})
+        setTargetRecovery(exposure)
       })
     return () => {
       active = false
     }
-  }, [])
+  }, [exposure])
 
   useEffect(() => {
     activeAuditCaseRef.current = selectedCaseId
@@ -237,8 +243,8 @@ function App() {
         </div>
 
         <div className="toolbar-proof" aria-label="Deployment proof">
-          <span>Deployed on Vultr</span>
-          <span>Vector receipts</span>
+          <span>{deploymentProofLabel(backendMode, healthSnapshot)}</span>
+          <span>{retrievalProofLabel(backendMode, healthSnapshot)}</span>
           <span>{rows.length} imported circuits</span>
         </div>
 
@@ -536,7 +542,7 @@ function MobilePaneButton({
 
 function StatusBar({
   approval,
-  backendMode,
+  backendLabel,
   formError,
   receiptCount,
   running,
@@ -551,12 +557,7 @@ function StatusBar({
   selectedCaseId: string
 }) {
   const state = formError || (running ? "Audit running" : approval ? "Approval recorded" : "Ready")
-  const stackLabel =
-    backendMode === "live"
-      ? "Vultr Compute + receipt store"
-      : backendMode === "checking"
-        ? "Checking backend"
-        : "Local deterministic fallback"
+  const stackLabel = backendLabel || "Checking backend"
 
   return (
     <footer className="statusbar">
@@ -607,6 +608,11 @@ function TraceRow({ event, index, onCitation }: { event: TraceEvent; index: numb
         <p>{event.detail}</p>
       </div>
       <strong className="trace-metric">{event.metric}</strong>
+      {event.provenance ? (
+        <Badge className="status-badge" variant="outline">
+          {event.provenance}
+        </Badge>
+      ) : null}
       <div className="trace-actions">
         {(event.citationIds || []).map((id) => (
           <button className="citation-link" key={id} type="button" onClick={() => onCitation(id)}>
@@ -790,6 +796,22 @@ function CitationSheet({
       </SheetContent>
     </Sheet>
   )
+}
+
+function deploymentProofLabel(backendMode: BackendMode, snapshot: HealthSnapshot) {
+  if (backendMode === "checking") return "Checking deployment"
+  if (backendMode !== "live") return "Local fallback"
+  if (snapshot.deployment === "vultr") return "Vultr Compute live"
+  if (snapshot.deployment === "local") return "Local server"
+  return "Live backend"
+}
+
+function retrievalProofLabel(backendMode: BackendMode, snapshot: HealthSnapshot) {
+  if (backendMode === "checking") return "Checking retrieval"
+  if (backendMode !== "live") return "Local index"
+  if (snapshot.retrievalMode === "vultr-embeddings") return "Vultr embeddings"
+  if (snapshot.retrievalMode === "local-tfidf") return "Local index"
+  return "Live retrieval"
 }
 
 function traceKindLabel(kind: TraceEvent["kind"]) {

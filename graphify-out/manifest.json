@@ -1,0 +1,512 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1783233176.7765598,
+    "ast_hash": "598cb075410bcd95220ac90bbb60344a",
+    "semantic_hash": "598cb075410bcd95220ac90bbb60344a"
+  },
+  "vultr-project-a/app/app.js": {
+    "mtime": 1783232529.7850165,
+    "ast_hash": "ebf91d8090133f8048df02529287320a",
+    "semantic_hash": "ebf91d8090133f8048df02529287320a"
+  },
+  "vultr-project-a/app/data.js": {
+    "mtime": 1783232529.8212762,
+    "ast_hash": "07c8f3572f436519a4bd671261e23324",
+    "semantic_hash": "07c8f3572f436519a4bd671261e23324"
+  },
+  "vultr-project-a/backend/reclaim_backend/__init__.py": {
+    "mtime": 1783232529.8593428,
+    "ast_hash": "38da410efadf2812ed84d5e1044dde3b",
+    "semantic_hash": "38da410efadf2812ed84d5e1044dde3b"
+  },
+  "vultr-project-a/backend/reclaim_backend/__main__.py": {
+    "mtime": 1783232529.860904,
+    "ast_hash": "492c351f9f34419f28fabd2db030d570",
+    "semantic_hash": "492c351f9f34419f28fabd2db030d570"
+  },
+  "vultr-project-a/backend/reclaim_backend/api.py": {
+    "mtime": 1783232529.8624303,
+    "ast_hash": "89966ceb264871a55eb1104380d7891b",
+    "semantic_hash": "89966ceb264871a55eb1104380d7891b"
+  },
+  "vultr-project-a/backend/reclaim_backend/orchestrator.py": {
+    "mtime": 1783232529.863941,
+    "ast_hash": "8ada7a10235dc24fb877b131c2e1cb64",
+    "semantic_hash": "8ada7a10235dc24fb877b131c2e1cb64"
+  },
+  "vultr-project-a/backend/reclaim_backend/seed_data.py": {
+    "mtime": 1783232529.8685992,
+    "ast_hash": "0e24a097d1be428167c621a508059402",
+    "semantic_hash": "0e24a097d1be428167c621a508059402"
+  },
+  "vultr-project-a/backend/reclaim_backend/server.py": {
+    "mtime": 1783232529.8762696,
+    "ast_hash": "ed06f4801287f2fa0659b0abe9d60fd2",
+    "semantic_hash": "ed06f4801287f2fa0659b0abe9d60fd2"
+  },
+  "vultr-project-a/backend/reclaim_backend/storage.py": {
+    "mtime": 1783232529.8778086,
+    "ast_hash": "2eafa203588d4bbc22e07e6ac61d546a",
+    "semantic_hash": "2eafa203588d4bbc22e07e6ac61d546a"
+  },
+  "vultr-project-a/backend/reclaim_core.py": {
+    "mtime": 1783232529.8820057,
+    "ast_hash": "490efd9960093467ad7e297d8ba78aa1",
+    "semantic_hash": "490efd9960093467ad7e297d8ba78aa1"
+  },
+  "vultr-project-a/backend/server.py": {
+    "mtime": 1783232529.888166,
+    "ast_hash": "e5276aa93d5cff1806ddd47e95f88158",
+    "semantic_hash": "e5276aa93d5cff1806ddd47e95f88158"
+  },
+  "vultr-project-a/backend/test_reclaim_core.py": {
+    "mtime": 1783232529.889713,
+    "ast_hash": "f705ee273f6549e488f9b688001b3de3",
+    "semantic_hash": "f705ee273f6549e488f9b688001b3de3"
+  },
+  "vultr-project-a/backend/tests/test_backend.py": {
+    "mtime": 1783232529.8932953,
+    "ast_hash": "62475202289a3b3af23766e7cf06c045",
+    "semantic_hash": "62475202289a3b3af23766e7cf06c045"
+  },
+  "vultr-project-a/components.json": {
+    "mtime": 1783232529.895814,
+    "ast_hash": "0178e696cc668fc76044ecdbd5c39403",
+    "semantic_hash": "0178e696cc668fc76044ecdbd5c39403"
+  },
+  "vultr-project-a/package.json": {
+    "mtime": 1783232541.6472964,
+    "ast_hash": "4dbc14b19ddbd89159f1457eede0b953",
+    "semantic_hash": "4dbc14b19ddbd89159f1457eede0b953"
+  },
+  "vultr-project-a/src/App.tsx": {
+    "mtime": 1783232541.677567,
+    "ast_hash": "251eeda5ed99d79018f4ff3b5a8e58c9",
+    "semantic_hash": "251eeda5ed99d79018f4ff3b5a8e58c9"
+  },
+  "vultr-project-a/src/components/ui/badge.tsx": {
+    "mtime": 1783232541.677567,
+    "ast_hash": "dd6e1bd51cfe45b8d5263f951b6d9081",
+    "semantic_hash": "dd6e1bd51cfe45b8d5263f951b6d9081"
+  },
+  "vultr-project-a/src/components/ui/button.tsx": {
+    "mtime": 1783232541.6791706,
+    "ast_hash": "4313c39f814069b5219cc012f1773992",
+    "semantic_hash": "4313c39f814069b5219cc012f1773992"
+  },
+  "vultr-project-a/src/components/ui/card.tsx": {
+    "mtime": 1783232541.6791706,
+    "ast_hash": "5366dff556d7b706a568748bcc0b2285",
+    "semantic_hash": "5366dff556d7b706a568748bcc0b2285"
+  },
+  "vultr-project-a/src/components/ui/separator.tsx": {
+    "mtime": 1783232541.6791706,
+    "ast_hash": "ed3e4e727f6e1ec6af1a8e7cccbdcf58",
+    "semantic_hash": "ed3e4e727f6e1ec6af1a8e7cccbdcf58"
+  },
+  "vultr-project-a/src/components/ui/sheet.tsx": {
+    "mtime": 1783232541.6808703,
+    "ast_hash": "42a68495d2d9185186eb6f75b84a7d54",
+    "semantic_hash": "42a68495d2d9185186eb6f75b84a7d54"
+  },
+  "vultr-project-a/src/components/ui/table.tsx": {
+    "mtime": 1783232541.681412,
+    "ast_hash": "117e9eaca8ababa9add5161e11177f2c",
+    "semantic_hash": "117e9eaca8ababa9add5161e11177f2c"
+  },
+  "vultr-project-a/src/components/ui/tabs.tsx": {
+    "mtime": 1783232541.681412,
+    "ast_hash": "56e2617ffcb810c5150c63fc988b6e28",
+    "semantic_hash": "56e2617ffcb810c5150c63fc988b6e28"
+  },
+  "vultr-project-a/src/components/ui/textarea.tsx": {
+    "mtime": 1783232541.6824193,
+    "ast_hash": "945eb3d72b9b0c3710f64367671b0512",
+    "semantic_hash": "945eb3d72b9b0c3710f64367671b0512"
+  },
+  "vultr-project-a/src/lib/reclaim.ts": {
+    "mtime": 1783232541.6829245,
+    "ast_hash": "db8b1efdf79e51361a89b57d866db987",
+    "semantic_hash": "db8b1efdf79e51361a89b57d866db987"
+  },
+  "vultr-project-a/src/lib/utils.ts": {
+    "mtime": 1783232541.6839297,
+    "ast_hash": "1d8011eb18769078bf77502b220daa5e",
+    "semantic_hash": "1d8011eb18769078bf77502b220daa5e"
+  },
+  "vultr-project-a/src/main.tsx": {
+    "mtime": 1783232541.6839297,
+    "ast_hash": "3041de560d2c0852e59991a770e2ff26",
+    "semantic_hash": "3041de560d2c0852e59991a770e2ff26"
+  },
+  "vultr-project-a/tsconfig.app.json": {
+    "mtime": 1783232541.6839297,
+    "ast_hash": "6beda0b95f88321dad19b1c2d3508171",
+    "semantic_hash": "6beda0b95f88321dad19b1c2d3508171"
+  },
+  "vultr-project-a/tsconfig.json": {
+    "mtime": 1783232541.6849358,
+    "ast_hash": "fdb3eb9b072e7e9eadc2229c793fe180",
+    "semantic_hash": "fdb3eb9b072e7e9eadc2229c793fe180"
+  },
+  "vultr-project-a/tsconfig.node.json": {
+    "mtime": 1783232541.6854415,
+    "ast_hash": "8b4e6a69beb553868f2bdddcf765a14e",
+    "semantic_hash": "8b4e6a69beb553868f2bdddcf765a14e"
+  },
+  "vultr-project-a/vite.config.d.ts": {
+    "mtime": 1783232541.6859655,
+    "ast_hash": "0e1a67b4f5e8a7d0b4ce59225bb47e16",
+    "semantic_hash": "0e1a67b4f5e8a7d0b4ce59225bb47e16"
+  },
+  "vultr-project-a/vite.config.js": {
+    "mtime": 1783232541.6869738,
+    "ast_hash": "9f7134a39724e5ee761ee32e34f4a79b",
+    "semantic_hash": "9f7134a39724e5ee761ee32e34f4a79b"
+  },
+  "vultr-project-a/vite.config.ts": {
+    "mtime": 1783232541.6874807,
+    "ast_hash": "8493b163f3f15b4a3846280984031531",
+    "semantic_hash": "8493b163f3f15b4a3846280984031531"
+  },
+  ".claude/CLAUDE.md": {
+    "mtime": 1783233176.7657616,
+    "ast_hash": "c232166e6492ba1ed955030b16979b05",
+    "semantic_hash": "c232166e6492ba1ed955030b16979b05"
+  },
+  ".claude/skills/graphify/SKILL.md": {
+    "mtime": 1783233176.7567868,
+    "ast_hash": "bb2bef44114226a8aec2c47c3b3c170e",
+    "semantic_hash": "bb2bef44114226a8aec2c47c3b3c170e"
+  },
+  ".claude/skills/graphify/references/add-watch.md": {
+    "mtime": 1783193186.569968,
+    "ast_hash": "d59d027fe449f06aa03905a01184e779",
+    "semantic_hash": "d59d027fe449f06aa03905a01184e779"
+  },
+  ".claude/skills/graphify/references/exports.md": {
+    "mtime": 1783193186.5715177,
+    "ast_hash": "9da2a2152e60a22f07f05fed5158f287",
+    "semantic_hash": "9da2a2152e60a22f07f05fed5158f287"
+  },
+  ".claude/skills/graphify/references/extraction-spec.md": {
+    "mtime": 1783193186.579047,
+    "ast_hash": "42fef56a01698118f7fd722acdadea34",
+    "semantic_hash": "42fef56a01698118f7fd722acdadea34"
+  },
+  ".claude/skills/graphify/references/github-and-merge.md": {
+    "mtime": 1783193186.5826726,
+    "ast_hash": "cde13df085e4c492aeb7ba298a996d0d",
+    "semantic_hash": "cde13df085e4c492aeb7ba298a996d0d"
+  },
+  ".claude/skills/graphify/references/hooks.md": {
+    "mtime": 1783193186.5847437,
+    "ast_hash": "3f545db6ce646650bb9de588f5512a27",
+    "semantic_hash": "3f545db6ce646650bb9de588f5512a27"
+  },
+  ".claude/skills/graphify/references/query.md": {
+    "mtime": 1783193186.5862935,
+    "ast_hash": "3c46f8ad006874260614ed8657d02307",
+    "semantic_hash": "3c46f8ad006874260614ed8657d02307"
+  },
+  ".claude/skills/graphify/references/transcribe.md": {
+    "mtime": 1783193186.591464,
+    "ast_hash": "67b6a5fa6c0974e18f60db9f8932fbd8",
+    "semantic_hash": "67b6a5fa6c0974e18f60db9f8932fbd8"
+  },
+  ".claude/skills/graphify/references/update.md": {
+    "mtime": 1783193186.5934887,
+    "ast_hash": "c698309979460d0f02ba616417844399",
+    "semantic_hash": "c698309979460d0f02ba616417844399"
+  },
+  "CLAUDE.md": {
+    "mtime": 1783234420.8812158,
+    "ast_hash": "06e975c2614fbef49dd4cb834c57342f",
+    "semantic_hash": "06e975c2614fbef49dd4cb834c57342f"
+  },
+  "INSTRUCTIONS.md": {
+    "mtime": 1783232529.613519,
+    "ast_hash": "d32897b214e67c5e123edbee83a9c35c",
+    "semantic_hash": "d32897b214e67c5e123edbee83a9c35c"
+  },
+  "README.md": {
+    "mtime": 1783232529.6166618,
+    "ast_hash": "24c5ad8c9f0f9dd9e7b15bd1cb49709f",
+    "semantic_hash": "24c5ad8c9f0f9dd9e7b15bd1cb49709f"
+  },
+  "projects/track-1-cursor/a/conferred-round1.md": {
+    "mtime": 1783232529.6197722,
+    "ast_hash": "560f4ee11ee0a4453ab61f4973500cd5",
+    "semantic_hash": "560f4ee11ee0a4453ab61f4973500cd5"
+  },
+  "projects/track-1-cursor/a/judge-1-round1.md": {
+    "mtime": 1783232529.625102,
+    "ast_hash": "f7c731330c3b6dcdd8c3761cf1138210",
+    "semantic_hash": "f7c731330c3b6dcdd8c3761cf1138210"
+  },
+  "projects/track-1-cursor/a/judge-2-round1.md": {
+    "mtime": 1783232529.6297107,
+    "ast_hash": "ea7b22a4d25822c9991d844a56a7705f",
+    "semantic_hash": "ea7b22a4d25822c9991d844a56a7705f"
+  },
+  "projects/track-1-cursor/a/proposal.md": {
+    "mtime": 1783232529.6327956,
+    "ast_hash": "9d57bb4d19ebfd1f91275bfe187ab91a",
+    "semantic_hash": "9d57bb4d19ebfd1f91275bfe187ab91a"
+  },
+  "projects/track-1-cursor/b/conferred-round1.md": {
+    "mtime": 1783232529.6390512,
+    "ast_hash": "c21b9a2d6781d8c299c0b2e7da018cb2",
+    "semantic_hash": "c21b9a2d6781d8c299c0b2e7da018cb2"
+  },
+  "projects/track-1-cursor/b/judge-1-round1.md": {
+    "mtime": 1783232529.6452122,
+    "ast_hash": "e8d5c7b815d8faa619932d65e5d36c0b",
+    "semantic_hash": "e8d5c7b815d8faa619932d65e5d36c0b"
+  },
+  "projects/track-1-cursor/b/judge-2-round1.md": {
+    "mtime": 1783232529.6483533,
+    "ast_hash": "6107d373275f0d7f8b8aaa2f32e2b6bf",
+    "semantic_hash": "6107d373275f0d7f8b8aaa2f32e2b6bf"
+  },
+  "projects/track-1-cursor/b/proposal.md": {
+    "mtime": 1783232529.651421,
+    "ast_hash": "ffa28e1e54d829c316c83cff4bdbf094",
+    "semantic_hash": "ffa28e1e54d829c316c83cff4bdbf094"
+  },
+  "projects/track-1-cursor/c/judge-1-round1.md": {
+    "mtime": 1783232529.6591558,
+    "ast_hash": "182a19d277d9cf8e38886fb3cd29290a",
+    "semantic_hash": "182a19d277d9cf8e38886fb3cd29290a"
+  },
+  "projects/track-1-cursor/c/judge-2-round1.md": {
+    "mtime": 1783232529.6622126,
+    "ast_hash": "ad4ff643236af225d3d6f13235a286ea",
+    "semantic_hash": "ad4ff643236af225d3d6f13235a286ea"
+  },
+  "projects/track-1-cursor/c/proposal.md": {
+    "mtime": 1783232529.6668737,
+    "ast_hash": "c0878f862c39a140dae365b9a0b39287",
+    "semantic_hash": "c0878f862c39a140dae365b9a0b39287"
+  },
+  "projects/track-2-vultr/a/judge-1-round1.md": {
+    "mtime": 1783232529.6720505,
+    "ast_hash": "794d55c5db3d0337fca5e28ad640101a",
+    "semantic_hash": "794d55c5db3d0337fca5e28ad640101a"
+  },
+  "projects/track-2-vultr/a/proposal.md": {
+    "mtime": 1783232529.6767268,
+    "ast_hash": "f08afae1b55fa3ba23be6177868b16dc",
+    "semantic_hash": "f08afae1b55fa3ba23be6177868b16dc"
+  },
+  "projects/track-2-vultr/b/proposal.md": {
+    "mtime": 1783232529.6842086,
+    "ast_hash": "90c92d3b59f34e062f00264ac3389ffc",
+    "semantic_hash": "90c92d3b59f34e062f00264ac3389ffc"
+  },
+  "projects/track-2-vultr/c/judge-2-round5.md": {
+    "mtime": 1783232529.6930182,
+    "ast_hash": "50331551765eca963851d831df9e039e",
+    "semantic_hash": "50331551765eca963851d831df9e039e"
+  },
+  "projects/track-2-vultr/c/proposal.md": {
+    "mtime": 1783232529.6960616,
+    "ast_hash": "bc923f21bda93cc74b61db0e286076fb",
+    "semantic_hash": "bc923f21bda93cc74b61db0e286076fb"
+  },
+  "projects/track-3-crusoe/a/judge-1-round5.md": {
+    "mtime": 1783232529.7017932,
+    "ast_hash": "40030bc55df01779bfc49c21057bdad9",
+    "semantic_hash": "40030bc55df01779bfc49c21057bdad9"
+  },
+  "projects/track-3-crusoe/a/proposal.md": {
+    "mtime": 1783232529.706425,
+    "ast_hash": "fdd33af8f70e8ddc5d73d90b66a74ee5",
+    "semantic_hash": "fdd33af8f70e8ddc5d73d90b66a74ee5"
+  },
+  "projects/track-3-crusoe/b/judge-1-round1.md": {
+    "mtime": 1783232529.7130878,
+    "ast_hash": "a339a893aaec46fd732e3e83f3fc54bc",
+    "semantic_hash": "a339a893aaec46fd732e3e83f3fc54bc"
+  },
+  "projects/track-3-crusoe/b/proposal.md": {
+    "mtime": 1783232529.7174807,
+    "ast_hash": "589d2c8fede78ab8a7620da24949f92a",
+    "semantic_hash": "589d2c8fede78ab8a7620da24949f92a"
+  },
+  "projects/track-3-crusoe/c/judge-1-round1.md": {
+    "mtime": 1783232529.7236283,
+    "ast_hash": "409c9a24f2a9d9e5c1152e71a8089d2a",
+    "semantic_hash": "409c9a24f2a9d9e5c1152e71a8089d2a"
+  },
+  "projects/track-3-crusoe/c/proposal.md": {
+    "mtime": 1783232529.7281709,
+    "ast_hash": "3dc1dd1505895d73d7b14bef399545d3",
+    "semantic_hash": "3dc1dd1505895d73d7b14bef399545d3"
+  },
+  "projects/track-4-deepmind/a/proposal.md": {
+    "mtime": 1783232529.7372434,
+    "ast_hash": "c5019c3a5a15ed7d5a96688b7bfb4c48",
+    "semantic_hash": "c5019c3a5a15ed7d5a96688b7bfb4c48"
+  },
+  "projects/track-4-deepmind/b/proposal.md": {
+    "mtime": 1783232529.7402883,
+    "ast_hash": "6a8379784aba44bd414626cc744243f6",
+    "semantic_hash": "6a8379784aba44bd414626cc744243f6"
+  },
+  "projects/track-4-deepmind/c/proposal.md": {
+    "mtime": 1783232529.7470112,
+    "ast_hash": "235d3c4e8a49363210a91de64a8ad701",
+    "semantic_hash": "235d3c4e8a49363210a91de64a8ad701"
+  },
+  "vultr-project-a/DESIGN_BRIEF.md": {
+    "mtime": 1783232529.7515645,
+    "ast_hash": "8a9a2ffc440ef2ecd9a39d357546a3db",
+    "semantic_hash": "8a9a2ffc440ef2ecd9a39d357546a3db"
+  },
+  "vultr-project-a/EXECUTION_PLAN.md": {
+    "mtime": 1783232529.755138,
+    "ast_hash": "c6f64441dcc56a114185c9e45dc6cd02",
+    "semantic_hash": "c6f64441dcc56a114185c9e45dc6cd02"
+  },
+  "vultr-project-a/FINAL_PROPOSAL.md": {
+    "mtime": 1783232529.760273,
+    "ast_hash": "5800cf55aa6cbca3a12b6d8e722c082a",
+    "semantic_hash": "5800cf55aa6cbca3a12b6d8e722c082a"
+  },
+  "vultr-project-a/JUDGE_RISK_REGISTER.md": {
+    "mtime": 1783232529.7765286,
+    "ast_hash": "3d952828154ac7068ad3324c69aa9e5a",
+    "semantic_hash": "3d952828154ac7068ad3324c69aa9e5a"
+  },
+  "vultr-project-a/README.md": {
+    "mtime": 1783232529.779061,
+    "ast_hash": "b8cac54ef2e4b51ab1fb9eec010b6cb4",
+    "semantic_hash": "b8cac54ef2e4b51ab1fb9eec010b6cb4"
+  },
+  "vultr-project-a/SOURCES.md": {
+    "mtime": 1783232529.781581,
+    "ast_hash": "6d30691ecec2caedd81f799a82380872",
+    "semantic_hash": "6d30691ecec2caedd81f799a82380872"
+  },
+  "vultr-project-a/app/README.md": {
+    "mtime": 1783232529.7831192,
+    "ast_hash": "736f3209ddcdd187f31d0489fc09d275",
+    "semantic_hash": "736f3209ddcdd187f31d0489fc09d275"
+  },
+  "vultr-project-a/app/demo-polish-notes.md": {
+    "mtime": 1783232529.8320384,
+    "ast_hash": "cef59a7a80c75a543238a5415f591d6e",
+    "semantic_hash": "cef59a7a80c75a543238a5415f591d6e"
+  },
+  "vultr-project-a/app/index.html": {
+    "mtime": 1783232529.83814,
+    "ast_hash": "d15aa06809db3af5739c020a17c67210",
+    "semantic_hash": "d15aa06809db3af5739c020a17c67210"
+  },
+  "vultr-project-a/app/ui-critique-notes.md": {
+    "mtime": 1783232529.8490813,
+    "ast_hash": "121da52f90ad25737270caef33713499",
+    "semantic_hash": "121da52f90ad25737270caef33713499"
+  },
+  "vultr-project-a/app/visual-design-notes.md": {
+    "mtime": 1783232529.8536923,
+    "ast_hash": "86655e6289ee8db47d8b2f42632ea70b",
+    "semantic_hash": "86655e6289ee8db47d8b2f42632ea70b"
+  },
+  "vultr-project-a/backend/README.md": {
+    "mtime": 1783232529.8562596,
+    "ast_hash": "7f80b9c301ef8d7ba8e7ca016e260018",
+    "semantic_hash": "7f80b9c301ef8d7ba8e7ca016e260018"
+  },
+  "vultr-project-a/docker-compose.yml": {
+    "mtime": 1783232529.9732976,
+    "ast_hash": "9aa088592afc2107a0d6f236c1fd1a8d",
+    "semantic_hash": "9aa088592afc2107a0d6f236c1fd1a8d"
+  },
+  "vultr-project-a/index.html": {
+    "mtime": 1783232529.974302,
+    "ast_hash": "5adc698b253b97252a9ba867dc018182",
+    "semantic_hash": "5adc698b253b97252a9ba867dc018182"
+  },
+  "vultr-project-a/requirements.txt": {
+    "mtime": 1783232541.6472964,
+    "ast_hash": "d73dd70b8a16d178bf0b0bc28ab33665",
+    "semantic_hash": "d73dd70b8a16d178bf0b0bc28ab33665"
+  },
+  "vultr-project-a/research/saas-screenshots/README.md": {
+    "mtime": 1783232541.6488478,
+    "ast_hash": "8f4fae9434bd95a04d990bc2a0297d9e",
+    "semantic_hash": "8f4fae9434bd95a04d990bc2a0297d9e"
+  },
+  "vultr-project-a/research/saas-screenshots/index.html": {
+    "mtime": 1783232541.6534517,
+    "ast_hash": "27e0ecc4d8702e7895de692714177e3d",
+    "semantic_hash": "27e0ecc4d8702e7895de692714177e3d"
+  },
+  "vultr-project-a/app/assets/clause-claim-window.svg": {
+    "mtime": 1783232529.7974465,
+    "ast_hash": "c087c0ad680709fb20f09bbe6ce888e1",
+    "semantic_hash": "c087c0ad680709fb20f09bbe6ce888e1"
+  },
+  "vultr-project-a/app/assets/clause-invoice-credit.svg": {
+    "mtime": 1783232529.8035345,
+    "ast_hash": "73b4af4c250440a55b7e5385f89e75f8",
+    "semantic_hash": "73b4af4c250440a55b7e5385f89e75f8"
+  },
+  "vultr-project-a/app/assets/clause-maintenance-notice.svg": {
+    "mtime": 1783232529.809475,
+    "ast_hash": "2a6ef9eff1039881c5508c0798506d6b",
+    "semantic_hash": "2a6ef9eff1039881c5508c0798506d6b"
+  },
+  "vultr-project-a/app/assets/clause-sla-tier.svg": {
+    "mtime": 1783232529.8140397,
+    "ast_hash": "9532307d4538b8f9edb31a9bc1dcda85",
+    "semantic_hash": "9532307d4538b8f9edb31a9bc1dcda85"
+  },
+  "vultr-project-a/app/assets/favicon.svg": {
+    "mtime": 1783232529.8186464,
+    "ast_hash": "625a6800001009205787e6141ebd9c07",
+    "semantic_hash": "625a6800001009205787e6141ebd9c07"
+  },
+  "vultr-project-a/research/saas-screenshots/attio.png": {
+    "mtime": 1783232541.6503963,
+    "ast_hash": "39074520792347087b53ef5f6b290b0a",
+    "semantic_hash": "39074520792347087b53ef5f6b290b0a"
+  },
+  "vultr-project-a/research/saas-screenshots/clerk.png": {
+    "mtime": 1783232541.6519103,
+    "ast_hash": "08d04bbe129c2aa62baf92c98e49241b",
+    "semantic_hash": "08d04bbe129c2aa62baf92c98e49241b"
+  },
+  "vultr-project-a/research/saas-screenshots/linear.png": {
+    "mtime": 1783232541.6549695,
+    "ast_hash": "f209a2d1118f74b9156aa173966914f1",
+    "semantic_hash": "f209a2d1118f74b9156aa173966914f1"
+  },
+  "vultr-project-a/research/saas-screenshots/mercury.png": {
+    "mtime": 1783232541.6644993,
+    "ast_hash": "97f49b9a68f4983ae1dacf6018342581",
+    "semantic_hash": "97f49b9a68f4983ae1dacf6018342581"
+  },
+  "vultr-project-a/research/saas-screenshots/ramp.png": {
+    "mtime": 1783232541.6673615,
+    "ast_hash": "c56a9e357d3effa362486bc5c46af533",
+    "semantic_hash": "c56a9e357d3effa362486bc5c46af533"
+  },
+  "vultr-project-a/research/saas-screenshots/retool.png": {
+    "mtime": 1783232541.6698844,
+    "ast_hash": "dda50674bad9904de91750f9aa799854",
+    "semantic_hash": "dda50674bad9904de91750f9aa799854"
+  },
+  "vultr-project-a/research/saas-screenshots/stripe.png": {
+    "mtime": 1783232541.6750479,
+    "ast_hash": "9c713c6112196ba602f2dfbb5dfd87c9",
+    "semantic_hash": "9c713c6112196ba602f2dfbb5dfd87c9"
+  },
+  "vultr-project-a/research/saas-screenshots/vercel.png": {
+    "mtime": 1783232541.6765609,
+    "ast_hash": "272d0ba91f53289bf9810580da09cd2c",
+    "semantic_hash": "272d0ba91f53289bf9810580da09cd2c"
+  }
+}

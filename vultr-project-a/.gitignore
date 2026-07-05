@@ -3,3 +3,4 @@ __pycache__/
 backend/var/
 reclaim.sqlite3
 .DS_Store
+.env

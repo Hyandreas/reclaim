@@ -52,9 +52,28 @@ curl -s -X POST http://127.0.0.1:8000/cases/CKT-ATL-014/approve \
   -d '{"action":"approve","reason":"Verified outage count and citations."}'
 ```
 
+## Live agent mode
+
+The canonical `server.py` stack now uses a real LLM planner and real clause
+retrieval instead of scripted routing:
+
+- `env_config.py` loads `vultr-project-a/.env` (os.environ wins). No keys are logged.
+- `llm_planner.plan_case` plans which review stages to run (Vultr -> NVIDIA -> deterministic
+  rules fallback). The LLM only PLANS and writes rationale; it never emits dollar amounts,
+  deadlines, prior-credit, or precedence - deterministic tools compute every number.
+- `retrieval.retrieve` embeds the clause corpus via Vultr embeddings, falling back to a
+  pure-python TF-IDF cosine index when embeddings are unavailable.
+- `GET /health` reports the real reachable planner/retrieval mode (no false "live" claims
+  when keys are absent) and a computed `targetRecovery`.
+
+Everything degrades cleanly with no keys (rules planner + TF-IDF retrieval).
+
 ## Test
 
 ```sh
 cd vultr-project-a/backend
+python3 -m unittest test_reclaim_core
 python3 -m unittest discover -s tests
+# Human live check (prints planner source + rationale + retrieval mode/score):
+python3 test_live_llm.py
 ```

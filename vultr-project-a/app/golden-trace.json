@@ -1,0 +1,504 @@
+{
+  "schema": "reclaim-golden-trace-v1",
+  "capturedFrom": "local-backend",
+  "deployment": "local",
+  "note": "Captured locally because this Codex runtime cannot reach the Vultr instance over SSH or HTTP.",
+  "capturedAt": "2026-07-05T08:08:42.922Z",
+  "runId": "152477c6837a4d19add37f335009bf91",
+  "endpoint": "/api/runs/152477c6837a4d19add37f335009bf91/events?fast=1",
+  "targetRecovery": 182400,
+  "eventCount": 25,
+  "events": [
+    {
+      "event": "run.started",
+      "data": {
+        "type": "run.started",
+        "runId": "152477c6837a4d19add37f335009bf91",
+        "targetRecovery": 182400
+      }
+    },
+    {
+      "event": "proof.active",
+      "data": {
+        "type": "proof.active",
+        "index": 0
+      }
+    },
+    {
+      "event": "case.status",
+      "data": {
+        "type": "case.status",
+        "caseId": "CKT-SEA-009",
+        "status": "skip - clean"
+      }
+    },
+    {
+      "event": "proof.active",
+      "data": {
+        "type": "proof.active",
+        "index": 1
+      }
+    },
+    {
+      "event": "active.case",
+      "data": {
+        "type": "active.case",
+        "caseId": "CKT-ATL-014"
+      }
+    },
+    {
+      "event": "case.status",
+      "data": {
+        "type": "case.status",
+        "caseId": "CKT-ATL-014",
+        "status": "deep review"
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 0,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [],
+          "id": "plan",
+          "kind": "model",
+          "eventName": "plan.completed",
+          "source": "planner",
+          "title": "Plan completed",
+          "status": "strategy",
+          "detail": "Rules planner: ambiguous interval tag -> exclusion review. no prior credit. Selected stages: retrieve outage records | calculate uptime | retrieve SLA tier | retrieve exclusion clause | skip invoice cross-check | check filing deadline | assemble memo.",
+          "metric": "CKT-ATL-014 / BAN 88321 / MRC $3,900 / Ticket INC-10422 / 3 days left",
+          "payload": {
+            "plan": {
+              "needsExclusion": true,
+              "needsBilling": false,
+              "selectedStages": [
+                "retrieve outage records",
+                "calculate uptime",
+                "retrieve SLA tier",
+                "retrieve exclusion clause",
+                "skip invoice cross-check",
+                "check filing deadline",
+                "assemble memo"
+              ],
+              "evidence": [
+                "CKT-ATL-014",
+                "BAN 88321",
+                "MRC $3,900",
+                "Ticket INC-10422",
+                "3 days left"
+              ],
+              "rationale": "Rules planner: ambiguous interval tag -> exclusion review. no prior credit.",
+              "stopCondition": "Stop when memo has amount, citations, confidence terms, and approval state.",
+              "plannerSource": "rules",
+              "plannerModel": null,
+              "rawResponse": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 1,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [],
+          "id": "retrieve-logs",
+          "kind": "retrieval",
+          "eventName": "outage_records.retrieved",
+          "source": "retrieval",
+          "title": "Outage records retrieved",
+          "status": "source",
+          "detail": "Matched INC-10422 to CKT-ATL-014 and BAN 88321.",
+          "metric": "87 raw outage minutes",
+          "payload": {
+            "tickets": [
+              "INC-10422"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 2,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [],
+          "id": "uptime",
+          "kind": "tool",
+          "eventName": "uptime.calculated",
+          "source": "tool",
+          "title": "Uptime calculated",
+          "status": "deterministic",
+          "detail": "uptime_calculator counted 87 minutes against the June 2026 SLA period.",
+          "metric": "99.80% actual vs 99.9% target",
+          "payload": {
+            "uptime": 99.79861111111111,
+            "countedMinutes": 87
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 3,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [
+            "sla-tier"
+          ],
+          "id": "tier",
+          "kind": "retrieval",
+          "eventName": "sla_tier.retrieved",
+          "source": "retrieval",
+          "title": "SLA tier retrieved",
+          "status": "citation",
+          "detail": "Matched the availability tier and MRC cap from the MSA service-level exhibit.",
+          "metric": "10% of MRC when monthly availability is below 99.9% (retrieval top score 0.635 via local-tfidf)",
+          "payload": {
+            "document": {
+              "title": "Northstar Telecom MSA - Service Level Exhibit",
+              "page": "Exhibit B, page 14",
+              "asset": "assets/clause-sla-tier.svg",
+              "excerpt": "If monthly availability falls below 99.9% and is at least 99.0%, customer receives a credit equal to 10% of the monthly recurring charge for the affected circuit."
+            },
+            "retrieval": {
+              "query": "monthly availability below 99.9% service credit recurring charge circuit",
+              "topScore": 0.635,
+              "mode": "local-tfidf",
+              "chunkId": "sla-tier#0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 4,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [
+            "maintenance-notice"
+          ],
+          "id": "exclusion",
+          "kind": "retrieval",
+          "eventName": "exclusion_review.retrieved",
+          "source": "retrieval",
+          "title": "Exclusion clause retrieved",
+          "status": "counts",
+          "detail": "Maintenance label counts because required 5-day notice is missing.",
+          "metric": "INC-10422: 87 minutes, scheduled maintenance (retrieval top score 0.639 via local-tfidf)",
+          "payload": {
+            "interval": {
+              "ticket": "INC-10422",
+              "minutes": 87,
+              "tag": "scheduled maintenance",
+              "notice": "missing",
+              "notes": "Maintenance label present, but no 5-day pre-notice attached to the ticket.",
+              "counts": true,
+              "reason": "Maintenance label counts because required 5-day notice is missing."
+            },
+            "document": {
+              "title": "Northstar Telecom MSA - Maintenance Exclusions",
+              "page": "Section 7.3, page 19",
+              "asset": "assets/clause-maintenance-notice.svg",
+              "excerpt": "Scheduled maintenance is excluded only when carrier gives at least five business days of written notice and performs the work inside the approved window."
+            },
+            "retrieval": {
+              "query": "scheduled maintenance excluded written notice business days approved window",
+              "topScore": 0.639,
+              "mode": "local-tfidf",
+              "chunkId": "maintenance-notice#0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 5,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [],
+          "id": "credit",
+          "kind": "tool",
+          "eventName": "credit.calculated",
+          "source": "tool",
+          "title": "Credit recalculated",
+          "status": "deterministic",
+          "detail": "credit_calculator used counted downtime, SLA tier, MRC, and cap. The model did not emit the dollar amount.",
+          "metric": "$390 gross service credit",
+          "payload": {
+            "mrc": 3900,
+            "creditPercent": 0.1,
+            "grossCredit": 390,
+            "recoverableAmount": 390
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 6,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [],
+          "id": "billing-skip",
+          "kind": "skip",
+          "eventName": "billing_crosscheck.skipped",
+          "source": "planner",
+          "title": "Billing cross-check skipped",
+          "status": "skipped",
+          "detail": "Planner found complete invoice history with no prior-credit markers.",
+          "metric": "Skip reason recorded in audit trace",
+          "payload": {
+            "skippedReason": "no prior-credit marker"
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 7,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [
+            "claim-window"
+          ],
+          "id": "deadline",
+          "kind": "tool",
+          "eventName": "deadline.checked",
+          "source": "tool",
+          "title": "Claim deadline checked",
+          "status": "urgent",
+          "detail": "deadline_check calculated 3 days left in the claim window.",
+          "metric": "File now",
+          "payload": {
+            "daysLeft": 3
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 8,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [],
+          "id": "decision",
+          "kind": "decision",
+          "eventName": "case.classified",
+          "source": "classifier",
+          "title": "Case classified",
+          "status": "deadline-expiring",
+          "detail": "classification = Deadline expiring. confidence_calculator returned 0.86.",
+          "metric": "$390 recoverable",
+          "payload": {
+            "classification": "Deadline expiring",
+            "confidence": 0.86
+          }
+        }
+      }
+    },
+    {
+      "event": "rail.event",
+      "data": {
+        "type": "rail.event",
+        "caseId": "CKT-ATL-014",
+        "event": {
+          "caseId": "CKT-ATL-014",
+          "seq": 9,
+          "at": "2026-07-05T08:08:42.920869+00:00",
+          "citationIds": [],
+          "id": "memo",
+          "kind": "memo",
+          "eventName": "memo.assembled",
+          "source": "memo",
+          "title": "Memo assembled",
+          "status": "ready",
+          "detail": "memo_assembler created a carrier-ready packet with account, circuit, ticket IDs, clause citations, amount, and approval state.",
+          "metric": "Ready for human review",
+          "payload": {
+            "memoId": "memo-CKT-ATL-014"
+          }
+        }
+      }
+    },
+    {
+      "event": "memo.ready",
+      "data": {
+        "type": "memo.ready",
+        "caseId": "CKT-ATL-014",
+        "memo": {
+          "memoId": "memo-CKT-ATL-014",
+          "caseId": "CKT-ATL-014",
+          "classification": "Deadline expiring",
+          "customer": "Northstar Retail Group",
+          "carrier": "Northstar Telecom",
+          "ban": "88321",
+          "circuitId": "CKT-ATL-014",
+          "storeName": "Atlanta Midtown",
+          "invoiceMonth": "June 2026",
+          "ticketIds": [
+            "INC-10422"
+          ],
+          "countedDowntimeMinutes": 87,
+          "slaTargetPct": 99.9,
+          "actualUptimePct": 99.79861111111111,
+          "creditFormula": {
+            "mrc": 3900,
+            "creditPct": 0.1,
+            "grossCredit": 390,
+            "cap": 3900,
+            "priorCredit": 0,
+            "recoverableCredit": 390
+          },
+          "filingDeadline": "3 days left",
+          "daysLeft": 3,
+          "citations": [
+            {
+              "citationId": "sla-tier",
+              "title": "Northstar Telecom MSA - Service Level Exhibit",
+              "page": "Exhibit B, page 14",
+              "asset": "assets/clause-sla-tier.svg",
+              "excerpt": "If monthly availability falls below 99.9% and is at least 99.0%, customer receives a credit equal to 10% of the monthly recurring charge for the affected circuit."
+            },
+            {
+              "citationId": "maintenance-notice",
+              "title": "Northstar Telecom MSA - Maintenance Exclusions",
+              "page": "Section 7.3, page 19",
+              "asset": "assets/clause-maintenance-notice.svg",
+              "excerpt": "Scheduled maintenance is excluded only when carrier gives at least five business days of written notice and performs the work inside the approved window."
+            },
+            {
+              "citationId": "claim-window",
+              "title": "Northstar Telecom MSA - Credit Claim Procedure",
+              "page": "Section 9.1, page 22",
+              "asset": "assets/clause-claim-window.svg",
+              "excerpt": "Customer must submit service-credit claims within thirty calendar days after the end of the billing month."
+            }
+          ],
+          "confidence": {
+            "retrieval_match": 0.64,
+            "ambiguity_resolution": 1,
+            "billing_certainty": 1,
+            "score": 0.86,
+            "threshold": 0.8,
+            "formula": "0.4 * retrieval_match + 0.4 * ambiguity_resolution + 0.2 * billing_certainty"
+          },
+          "auditEventIds": [
+            "plan.completed",
+            "outage_records.retrieved",
+            "uptime.calculated",
+            "sla_tier.retrieved",
+            "exclusion_review.retrieved",
+            "credit.calculated",
+            "billing_crosscheck.skipped",
+            "deadline.checked",
+            "case.classified",
+            "memo.assembled"
+          ],
+          "approval": null
+        }
+      }
+    },
+    {
+      "event": "proof.active",
+      "data": {
+        "type": "proof.active",
+        "index": 2
+      }
+    },
+    {
+      "event": "case.status",
+      "data": {
+        "type": "case.status",
+        "caseId": "CKT-DEN-031",
+        "status": "already credited"
+      }
+    },
+    {
+      "event": "case.status",
+      "data": {
+        "type": "case.status",
+        "caseId": "CKT-PHX-022",
+        "status": "deadline expiring"
+      }
+    },
+    {
+      "event": "case.status",
+      "data": {
+        "type": "case.status",
+        "caseId": "CKT-MIA-020",
+        "status": "excluded"
+      }
+    },
+    {
+      "event": "case.status",
+      "data": {
+        "type": "case.status",
+        "caseId": "CKT-BOS-018",
+        "status": "needs review"
+      }
+    },
+    {
+      "event": "counter.update",
+      "data": {
+        "type": "counter.update",
+        "amount": 182400
+      }
+    },
+    {
+      "event": "run.completed",
+      "data": {
+        "type": "run.completed",
+        "runId": "152477c6837a4d19add37f335009bf91",
+        "amount": 182400
+      }
+    },
+    {
+      "event": "done",
+      "data": {
+        "done": true
+      }
+    }
+  ]
+}

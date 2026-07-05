@@ -91,6 +91,7 @@ export type TraceEvent = {
   detail: string
   metric: string
   citationIds?: string[]
+  provenance?: string
 }
 
 export type ClaimMemo = {
@@ -377,6 +378,13 @@ export function localMemo(item: LiveCase): ClaimMemo {
 }
 
 export function normalizeBackendEvent(event: Partial<TraceEvent> & Record<string, unknown>): TraceEvent {
+  const plan = event.plan && typeof event.plan === "object" ? (event.plan as Record<string, unknown>) : undefined
+  const retrieval = event.retrieval && typeof event.retrieval === "object" ? (event.retrieval as Record<string, unknown>) : undefined
+  const plannerSource = typeof plan?.plannerSource === "string" ? plan.plannerSource : undefined
+  const provenance = plannerSource
+    ? plannerProvenanceLabel(plannerSource)
+    : retrievalProvenanceLabel(retrieval)
+
   return {
     eventName: String(event.eventName || event.kind || "event"),
     kind: (event.kind as TraceEvent["kind"]) || "tool",
@@ -385,5 +393,60 @@ export function normalizeBackendEvent(event: Partial<TraceEvent> & Record<string
     detail: String(event.detail || ""),
     metric: String(event.metric || ""),
     citationIds: Array.isArray(event.citationIds) ? event.citationIds.map(String) : [],
+    provenance,
   }
+}
+
+/** Health snapshot shared by the top-strip label and the toolbar proof line. */
+export type HealthSnapshot = {
+  deployment?: string
+  plannerMode?: string
+  retrievalMode?: string
+  targetRecovery?: number
+}
+
+export function parseHealthSnapshot(health: unknown): HealthSnapshot {
+  if (!health || typeof health !== "object") return {}
+  const record = health as Record<string, unknown>
+  const planner = record.planner && typeof record.planner === "object" ? (record.planner as Record<string, unknown>) : undefined
+  const retrieval = record.retrieval && typeof record.retrieval === "object" ? (record.retrieval as Record<string, unknown>) : undefined
+  const targetRecovery = Number(record.targetRecovery)
+
+  return {
+    deployment: typeof record.deployment === "string" ? record.deployment : undefined,
+    plannerMode: typeof planner?.mode === "string" ? planner.mode : undefined,
+    retrievalMode: typeof retrieval?.mode === "string" ? retrieval.mode : undefined,
+    targetRecovery: Number.isFinite(targetRecovery) && targetRecovery > 0 ? targetRecovery : undefined,
+  }
+}
+
+/** Compact, truthful backend label for the top strip / status bar. Never claims Vultr unless health says so. */
+export function describeBackendLabel(snapshot: HealthSnapshot): string {
+  const parts: string[] = []
+  if (snapshot.deployment === "vultr") parts.push("Vultr Compute live")
+  else if (snapshot.deployment === "local") parts.push("Local server")
+
+  if (snapshot.plannerMode === "vultr") parts.push("Planner: Nemotron on Vultr Inference")
+  else if (snapshot.plannerMode === "nvidia") parts.push("Planner: NVIDIA Nemotron")
+  else if (snapshot.plannerMode === "rules") parts.push("Planner: deterministic rules")
+
+  if (snapshot.retrievalMode === "vultr-embeddings") parts.push("Retrieval: Vultr embeddings")
+  else if (snapshot.retrievalMode === "local-tfidf") parts.push("Retrieval: local index")
+
+  return parts.length ? parts.join(" / ") : "Live backend"
+}
+
+export function plannerProvenanceLabel(source: string): string {
+  if (source === "vultr") return "via Vultr Nemotron"
+  if (source === "nvidia") return "via NVIDIA Nemotron"
+  return "rules fallback"
+}
+
+export function retrievalProvenanceLabel(retrieval?: Record<string, unknown>): string | undefined {
+  if (!retrieval) return undefined
+  const mode = retrieval.mode
+  const modeLabel = mode === "vultr-embeddings" ? "Vultr embeddings" : mode === "local-tfidf" ? "local index" : typeof mode === "string" ? mode : undefined
+  if (!modeLabel) return undefined
+  const topScore = Number(retrieval.topScore)
+  return Number.isFinite(topScore) ? `match ${topScore.toFixed(2)} · ${modeLabel}` : modeLabel
 }

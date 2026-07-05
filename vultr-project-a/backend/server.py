@@ -9,12 +9,12 @@ import time
 from urllib.parse import parse_qs, unquote, urlparse
 
 from reclaim_core import (
-    CORPUS_VERSION,
     DOCUMENTS,
     ROOT,
-    TARGET_RECOVERY,
+    health_payload,
     init_db,
     persist_run,
+    persist_run_for_case,
     portfolio,
     record_approval,
     stored_events_for_case,
@@ -48,17 +48,7 @@ class ReclaimHandler(BaseHTTPRequestHandler):
         query = parse_qs(parsed.query)
         try:
             if path in {"/api/health", "/health"}:
-                self.write_json(
-                    {
-                        "ok": True,
-                        "service": "reclaim",
-                        "database": "sqlite",
-                        "corpusVersion": CORPUS_VERSION,
-                        "retrievalMode": "local deterministic vector mirror",
-                        "objectStore": "local object-storage mirror",
-                        "targetRecovery": TARGET_RECOVERY,
-                    }
-                )
+                self.write_json(health_payload())
             elif path in {"/api/portfolio", "/portfolio"}:
                 self.write_json(portfolio())
             elif path.startswith("/api/cases/") and path.endswith("/events"):
@@ -99,9 +89,11 @@ class ReclaimHandler(BaseHTTPRequestHandler):
                 run_id = persist_run()
                 self.write_json({"runId": run_id, "eventsUrl": f"/api/runs/{run_id}/events"})
             elif path.startswith("/cases/") and path.endswith("/run"):
-                persist_run()
                 case_id = unquote(path.split("/")[2])
-                self.write_json({"caseId": case_id, "eventsUrl": f"/cases/{case_id}/events"})
+                run_id = persist_run_for_case(case_id)
+                self.write_json(
+                    {"caseId": case_id, "runId": run_id, "eventsUrl": f"/cases/{case_id}/events"}
+                )
             elif path.startswith("/api/cases/") and path.endswith("/approve"):
                 case_id = unquote(path.split("/")[3])
                 body = self.read_json()
