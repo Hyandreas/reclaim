@@ -92,6 +92,8 @@ function App() {
   const [selectedCitation, setSelectedCitation] = useState<string | null>(null)
   const [formError, setFormError] = useState("")
   const [mobilePane, setMobilePane] = useState<MobilePane>("evidence")
+  const [explorerOpen, setExplorerOpen] = useState(true)
+  const [inspectorOpen, setInspectorOpen] = useState(true)
   const [filter, setFilter] = useState("")
   const activeAuditCaseRef = useRef(selectedCaseId)
   const filterInputRef = useRef<HTMLInputElement>(null)
@@ -261,18 +263,46 @@ function App() {
         <MobilePaneButton active={mobilePane === "packet"} label="Packet" value={formatCurrency(selectedCredit.recoverableAmount)} onClick={() => setMobilePane("packet")} />
       </div>
 
-      <main className="workbench" data-active-pane={mobilePane}>
+      <main
+        className="workbench"
+        data-active-pane={mobilePane}
+        data-explorer={explorerOpen ? "open" : "closed"}
+        data-inspector={inspectorOpen ? "open" : "closed"}
+      >
         <nav className="activity-rail" aria-label="Primary tools">
-          <ActivityRailButton active={mobilePane === "queue"} label="Queue" onClick={() => setMobilePane("queue")}>
+          <ActivityRailButton
+            active={explorerOpen}
+            label={explorerOpen ? "Hide claims list" : "Show claims list"}
+            onClick={() => {
+              setMobilePane("queue")
+              setExplorerOpen((open) => !open)
+            }}
+          >
             <PanelLeft />
           </ActivityRailButton>
-          <ActivityRailButton active={mobilePane === "evidence"} label="Evidence" onClick={() => setMobilePane("evidence")}>
+          <ActivityRailButton
+            active={!explorerOpen && !inspectorOpen}
+            label="Focus trace"
+            onClick={() => {
+              setMobilePane("evidence")
+              const focus = explorerOpen || inspectorOpen
+              setExplorerOpen(!focus)
+              setInspectorOpen(!focus)
+            }}
+          >
             <Activity />
           </ActivityRailButton>
-          <ActivityRailButton active={mobilePane === "packet"} label="Packet" onClick={() => setMobilePane("packet")}>
+          <ActivityRailButton
+            active={inspectorOpen}
+            label={inspectorOpen ? "Hide packet" : "Show packet"}
+            onClick={() => {
+              setMobilePane("packet")
+              setInspectorOpen((open) => !open)
+            }}
+          >
             <ClipboardCheck />
           </ActivityRailButton>
-          <ActivityRailButton label="Receipts" onClick={() => setSelectedCitation("sla-tier")}>
+          <ActivityRailButton label="Open receipts" onClick={() => setSelectedCitation("sla-tier")}>
             <Files />
           </ActivityRailButton>
         </nav>

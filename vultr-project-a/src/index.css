@@ -48,7 +48,7 @@
   --ring: oklch(54% 0.14 252);
   --panel: oklch(98.5% 0.005 248);
   --panel-rail: oklch(93.6% 0.011 248);
-  --stage: oklch(99.3% 0.004 248);
+  --stage: oklch(99.8% 0.002 248);
   --stage-tint: oklch(97.3% 0.012 248);
   --context: oklch(95.7% 0.008 248);
   --context-deep: oklch(92.8% 0.01 248);
@@ -133,6 +133,28 @@ button {
   font-family: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
+}
+
+/* Thin, quiet scrollbars — workbench panes scroll constantly; the chrome shouldn't shout. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--muted-foreground) 26%, transparent);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--muted-foreground) 44%, transparent);
+  background-clip: padding-box;
 }
 
 /* Restrained, consistent focus ring for keyboard users. */
@@ -344,6 +366,37 @@ button {
   overflow: hidden;
 }
 
+/* Activity-rail panel toggles — desktop only. Below 860px, data-active-pane governs instead. */
+@media (min-width: 861px) {
+  .workbench[data-explorer="closed"] .explorer-pane {
+    display: none;
+  }
+  .workbench[data-inspector="closed"] .inspector-pane {
+    display: none;
+  }
+}
+
+@media (min-width: 1281px) {
+  .workbench[data-explorer="closed"] {
+    grid-template-columns: 40px minmax(540px, 1fr) minmax(306px, 348px);
+  }
+  .workbench[data-inspector="closed"] {
+    grid-template-columns: 40px minmax(238px, 276px) minmax(540px, 1fr);
+  }
+  .workbench[data-explorer="closed"][data-inspector="closed"] {
+    grid-template-columns: 40px minmax(540px, 1fr);
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1280px) {
+  .workbench[data-explorer="closed"] {
+    grid-template-columns: 40px minmax(430px, 1fr);
+  }
+  .workbench[data-explorer="closed"] .inspector-pane {
+    grid-column: 2 / 3;
+  }
+}
+
 .activity-rail {
   display: flex;
   flex-direction: column;
@@ -474,11 +527,19 @@ button {
   flex: 0 0 auto;
   align-items: center;
   gap: var(--sp-2);
-  min-height: 36px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in oklch, var(--context) 76%, var(--context-deep));
-  padding: 0 var(--sp-3);
+  min-height: 32px;
+  margin: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--stage);
+  padding: 0 var(--sp-2);
   color: var(--muted-foreground);
+  transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+}
+
+.search-row:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 18%, transparent);
 }
 
 .search-row svg {
@@ -712,8 +773,9 @@ button {
 
 .case-titleline strong {
   overflow: hidden;
-  font-size: var(--fs-15);
-  font-weight: var(--fw-value);
+  font-size: var(--fs-18);
+  font-weight: var(--fw-strong);
+  letter-spacing: -0.012em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -746,6 +808,13 @@ button {
   width: 100%;
   padding: 0 var(--sp-2);
   font-size: var(--fs-12);
+}
+
+/* Segmented-control thumb — white pill with a whisper of lift, like GitHub/Linear switchers. */
+.case-tab[data-state="active"] {
+  border-color: var(--border);
+  background: var(--stage);
+  box-shadow: 0 1px 2px oklch(24% 0.03 248 / 0.08);
 }
 
 .decision-line {
@@ -844,12 +913,13 @@ button {
   gap: var(--sp-3);
   flex: 0 0 auto;
   border-bottom: 1px solid var(--line-soft);
-  background: color-mix(in oklch, var(--stage) 78%, var(--context));
+  background: transparent;
   padding: var(--sp-1) var(--sp-3);
-  color: var(--muted-foreground);
+  color: color-mix(in oklch, var(--muted-foreground) 82%, var(--border));
   font-size: var(--fs-11);
-  font-weight: var(--fw-strong);
-  letter-spacing: var(--track-label);}
+  font-weight: var(--fw-label);
+  letter-spacing: var(--track-label);
+}
 
 .trace-row {
   display: grid;
@@ -896,7 +966,7 @@ button {
 .trace-row[data-kind="tool"] .trace-metric,
 .trace-row[data-kind="decision"] .trace-metric {
   color: var(--foreground);
-  font-weight: var(--fw-strong);
+  font-weight: var(--fw-value);
 }
 
 .trace-step strong,
@@ -905,9 +975,10 @@ button {
 }
 
 .trace-step strong {
-  color: var(--foreground);
-  font-size: var(--fs-13);
-  font-weight: var(--fw-strong);
+  color: var(--muted-foreground);
+  font-family: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-label);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1351,8 +1422,8 @@ button {
 
 .statusbar strong {
   margin-left: auto;
-  color: var(--foreground);
-  font-weight: var(--fw-strong);
+  color: var(--muted-foreground);
+  font-weight: var(--fw-value);
 }
 
 .source-sheet {
