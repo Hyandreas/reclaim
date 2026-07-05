@@ -209,7 +209,7 @@ function App() {
 
         const memoPayload = await getCaseMemo(auditCaseId)
         if (activeAuditCaseRef.current !== auditCaseId) return
-        setMemo({ ...localMemo(auditCase), ...memoPayload })
+        setMemo(normalizeApiMemoPayload(memoPayload, localMemo(auditCase)))
       } else {
         setEvents(localTrace(auditCase))
         setMemo(localMemo(auditCase))
@@ -811,6 +811,49 @@ function StatusBar({
       <strong>{state}</strong>
     </footer>
   )
+}
+
+function normalizeApiMemoPayload(payload: Partial<ClaimMemo>, fallback: ClaimMemo): ClaimMemo {
+  const source = payload as Record<string, unknown>
+  const formula = source.creditFormula && typeof source.creditFormula === "object" ? (source.creditFormula as Record<string, unknown>) : undefined
+  const confidence = source.confidence && typeof source.confidence === "object" ? (source.confidence as Record<string, unknown>) : undefined
+  const citationIds = Array.isArray(source.citations)
+    ? source.citations
+        .map((item) => (item && typeof item === "object" ? String((item as Record<string, unknown>).citationId || "") : ""))
+        .filter(Boolean)
+    : []
+  const citationMap = payload.citations && !Array.isArray(payload.citations) ? payload.citations : fallback.citations
+  const amount = Number(formula?.recoverableCredit ?? source.amount ?? fallback.amount)
+  const uptime = Number(source.actualUptimePct)
+  const threshold = Number(source.slaTargetPct)
+  const confidenceScore = Number(confidence?.score)
+  const confidenceFormula = typeof confidence?.formula === "string" ? confidence.formula : fallback.confidenceLabel
+
+  return {
+    ...fallback,
+    ...payload,
+    caseId: String(source.caseId || fallback.caseId),
+    store: String(source.storeName || source.store || fallback.store),
+    carrier: String(source.carrier || fallback.carrier),
+    ban: String(source.ban || fallback.ban),
+    circuit: String(source.circuitId || source.circuit || fallback.circuit),
+    invoiceMonth: String(source.invoiceMonth || fallback.invoiceMonth),
+    mrc: Number(source.mrc ?? formula?.mrc ?? fallback.mrc),
+    tickets: Array.isArray(source.ticketIds) ? source.ticketIds.map(String) : fallback.tickets,
+    amount: Number.isFinite(amount) ? amount : fallback.amount,
+    availability: Number.isFinite(uptime) && Number.isFinite(threshold) ? `${uptime.toFixed(2)}% actual vs ${threshold}% target` : fallback.availability,
+    exclusionDecision: fallback.exclusionDecision,
+    deadline: String(source.filingDeadline || fallback.deadline),
+    confidenceLabel: Number.isFinite(confidenceScore) ? `${confidenceScore.toFixed(2)} = ${confidenceFormula}` : fallback.confidenceLabel,
+    classification: String(source.classification || fallback.classification),
+    citations: citationIds.length
+      ? {
+          availability: citationIds.includes("sla-tier") ? "sla-tier" : citationMap.availability,
+          exclusion: citationIds.includes("maintenance-notice") ? "maintenance-notice" : citationMap.exclusion,
+          deadline: citationIds.includes("claim-window") ? "claim-window" : citationMap.deadline,
+        }
+      : citationMap,
+  }
 }
 
 function CaseInboxRow({ row, selected, onSelect }: { row: PortfolioRow; selected: boolean; onSelect: () => void }) {

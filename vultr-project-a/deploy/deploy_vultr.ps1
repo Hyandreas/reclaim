@@ -42,6 +42,7 @@ set -e
 apt-get update -qq && apt-get install -y -qq unzip python3 >/dev/null
 mkdir -p /opt/reclaim
 unzip -oq /root/reclaim-deploy.zip -d /opt/reclaim
+find /opt/reclaim -type d -name '__pycache__' -prune -exec rm -rf {} +
 cat > /etc/systemd/system/reclaim.service <<'UNIT'
 [Unit]
 Description=Reclaim SLA credit audit demo
@@ -49,6 +50,7 @@ After=network.target
 [Service]
 WorkingDirectory=/opt/reclaim
 Environment=DEPLOYMENT_MODE=vultr
+Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/usr/bin/python3 /opt/reclaim/backend/server.py --host 0.0.0.0 --port 8765
 Restart=always
 [Install]
