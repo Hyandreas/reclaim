@@ -4,17 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+  "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        outline: "border-border text-foreground",
+        default:
+          "border-[color-mix(in_oklch,var(--primary)_30%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] text-[color-mix(in_oklch,var(--primary)_58%,var(--foreground))]",
+        secondary:
+          "border-border bg-secondary text-secondary-foreground",
+        outline: "border-border bg-transparent text-foreground",
         muted: "border-border bg-muted text-muted-foreground",
-        success: "border-emerald-200 bg-emerald-50 text-emerald-800",
-        warning: "border-amber-200 bg-amber-50 text-amber-800",
-        violet: "border-violet-200 bg-violet-50 text-violet-800",
+        success:
+          "border-[color-mix(in_oklch,var(--success)_30%,var(--border))] bg-[color-mix(in_oklch,var(--success)_13%,var(--card))] text-[color-mix(in_oklch,var(--success)_55%,var(--foreground))]",
+        warning:
+          "border-[color-mix(in_oklch,var(--warning)_34%,var(--border))] bg-[color-mix(in_oklch,var(--warning)_15%,var(--card))] text-[color-mix(in_oklch,var(--warning)_62%,var(--foreground))]",
+        violet:
+          "border-[color-mix(in_oklch,var(--violet)_30%,var(--border))] bg-[color-mix(in_oklch,var(--violet)_13%,var(--card))] text-[color-mix(in_oklch,var(--violet)_56%,var(--foreground))]",
       },
     },
     defaultVariants: {

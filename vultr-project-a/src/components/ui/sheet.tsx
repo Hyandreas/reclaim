@@ -16,7 +16,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-50 bg-foreground/20 backdrop-blur-[2px] data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-foreground/25 data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className,
     )}
     {...props}
@@ -34,13 +34,13 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-border bg-background shadow-xl transition-transform duration-200 ease-out data-[state=closed]:translate-x-full data-[state=open]:translate-x-0",
+        "fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-border bg-background shadow-[-16px_0_40px_-28px_oklch(0%_0_0_/_0.4)] transition-transform duration-200 ease-out data-[state=closed]:translate-x-full data-[state=open]:translate-x-0",
         className,
       )}
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
+      <DialogPrimitive.Close className="absolute right-3 top-3 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background">
         <X className="size-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -50,7 +50,7 @@ const SheetContent = React.forwardRef<
 SheetContent.displayName = DialogPrimitive.Content.displayName
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("grid gap-1.5 p-6 text-left", className)} {...props} />
+  <div className={cn("grid gap-1 border-b border-border p-5 text-left", className)} {...props} />
 )
 SheetHeader.displayName = "SheetHeader"
 
@@ -58,7 +58,7 @@ const SheetTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold", className)} {...props} />
+  <DialogPrimitive.Title ref={ref} className={cn("text-base font-semibold leading-none tracking-normal", className)} {...props} />
 ))
 SheetTitle.displayName = DialogPrimitive.Title.displayName
 

@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import {
-  BookOpen,
-  CheckCircle2,
-  CircleDollarSign,
+  Activity,
+  BadgeCheck,
+  ClipboardCheck,
+  Clock3,
+  Database,
   FileCheck2,
+  Files,
+  Gauge,
+  GitBranch,
   LockKeyhole,
+  PanelLeft,
   Play,
   RefreshCcw,
   Search,
   ShieldCheck,
-  Sparkles,
-  Timer,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -43,8 +47,11 @@ import {
 } from "@/lib/reclaim"
 
 type BackendMode = "checking" | "live" | "fallback"
+type MobilePane = "queue" | "evidence" | "packet"
 
-const API_BASE = window.location.port === "8765" ? "" : "http://127.0.0.1:8765"
+const API_BASE =
+  (import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL ||
+  (window.location.port === "8765" ? "" : "http://127.0.0.1:8765")
 
 function apiUrl(path: string) {
   return `${API_BASE}${path}`
@@ -70,9 +77,11 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 function App() {
   const rows = useMemo(() => allRows(), [])
   const exposure = useMemo(() => calculatedExposure(), [])
+  const headlineRecovery = reclaimData.targetRecovery || exposure
   const [selectedCaseId, setSelectedCaseId] = useState(reclaimData.liveCases[0].id)
   const selectedCase = reclaimData.liveCases.find((item) => item.id === selectedCaseId) || reclaimData.liveCases[0]
   const selectedCredit = creditForCase(selectedCase)
+  const sourceReceiptCount = Object.values(localMemo(selectedCase).citations).filter(Boolean).length
   const [events, setEvents] = useState<TraceEvent[]>(() => localTrace(selectedCase))
   const [memo, setMemo] = useState<ClaimMemo>(() => localMemo(selectedCase))
   const [approval, setApproval] = useState<ApprovalRecord | null>(null)
@@ -82,6 +91,15 @@ function App() {
   const [backendLabel, setBackendLabel] = useState("Checking backend")
   const [selectedCitation, setSelectedCitation] = useState<string | null>(null)
   const [formError, setFormError] = useState("")
+  const [mobilePane, setMobilePane] = useState<MobilePane>("evidence")
+  const [filter, setFilter] = useState("")
+  const activeAuditCaseRef = useRef(selectedCaseId)
+  const filterInputRef = useRef<HTMLInputElement>(null)
+  const filteredRows = useMemo(() => {
+    const query = filter.trim().toLowerCase()
+    if (!query) return rows
+    return rows.filter((row) => [row.id, row.ban, row.store, row.route].some((value) => value.toLowerCase().includes(query)))
+  }, [filter, rows])
 
   useEffect(() => {
     let active = true
@@ -93,7 +111,7 @@ function App() {
           : null
         const corpus = String(health.corpusVersion || retrievalIndex?.corpusVersion || "corpus-v7")
         setBackendMode("live")
-        setBackendLabel(`Live backend, ${corpus}`)
+        setBackendLabel(`Vultr Compute live / Object Storage receipts / ${corpus} / audit DB`)
       })
       .catch(() => {
         if (!active) return
@@ -106,6 +124,7 @@ function App() {
   }, [])
 
   useEffect(() => {
+    activeAuditCaseRef.current = selectedCaseId
     setEvents(localTrace(selectedCase))
     setMemo(localMemo(selectedCase))
     setApproval(null)
@@ -113,38 +132,61 @@ function App() {
     setFormError("")
   }, [selectedCaseId, selectedCase])
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null
+      const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA"
+      if (event.key === "/" && !isTyping) {
+        event.preventDefault()
+        filterInputRef.current?.focus()
+      }
+      if (event.key === "Escape" && selectedCitation) {
+        setSelectedCitation(null)
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [selectedCitation])
+
   async function runAudit(mode: "live" | "replay" = "live") {
+    const auditCase = selectedCase
+    const auditCaseId = auditCase.id
     setRunning(true)
     setFormError("")
     setApproval(null)
 
     try {
       if (backendMode === "live" && mode === "live") {
-        await requestJson(`/cases/${encodeURIComponent(selectedCase.id)}/run`, {
+        await requestJson(`/cases/${encodeURIComponent(auditCaseId)}/run`, {
           method: "POST",
           body: JSON.stringify({ requestedBy: "submission-review" }),
         })
         const eventPayload = await requestJson<{ events?: TraceEvent[] }>(
-          `/api/cases/${encodeURIComponent(selectedCase.id)}/events`,
+          `/api/cases/${encodeURIComponent(auditCaseId)}/events`,
         )
+        if (activeAuditCaseRef.current !== auditCaseId) return
         const backendEvents = (eventPayload.events || []).map(normalizeBackendEvent)
-        setEvents(backendEvents.length ? backendEvents : localTrace(selectedCase))
+        setEvents(backendEvents.length ? backendEvents : localTrace(auditCase))
 
         const memoPayload = await requestJson<Partial<ClaimMemo>>(
-          `/api/cases/${encodeURIComponent(selectedCase.id)}/memo`,
+          `/api/cases/${encodeURIComponent(auditCaseId)}/memo`,
         )
-        setMemo({ ...localMemo(selectedCase), ...memoPayload })
+        if (activeAuditCaseRef.current !== auditCaseId) return
+        setMemo({ ...localMemo(auditCase), ...memoPayload })
       } else {
-        setEvents(localTrace(selectedCase))
-        setMemo(localMemo(selectedCase))
+        setEvents(localTrace(auditCase))
+        setMemo(localMemo(auditCase))
       }
     } catch (error) {
       setBackendMode("fallback")
       setBackendLabel(error instanceof Error ? error.message : "Backend unavailable")
-      setEvents(localTrace(selectedCase))
-      setMemo(localMemo(selectedCase))
+      if (activeAuditCaseRef.current === auditCaseId) {
+        setEvents(localTrace(auditCase))
+        setMemo(localMemo(auditCase))
+      }
     } finally {
-      setRunning(false)
+      if (activeAuditCaseRef.current === auditCaseId) setRunning(false)
     }
   }
 
@@ -177,275 +219,370 @@ function App() {
     }
   }
 
-  const visibleEvents = events.slice(0, 7)
+  const visibleEvents = events.slice(0, 8)
   const selectedDoc = selectedCitation ? reclaimData.documents[selectedCitation] : null
+  const decisionHeadline = compactPlannerHint(selectedCase.plannerHint)
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="review-topbar">
-        <div className="flex items-center gap-3">
-          <div className="brand-tile">R</div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">Vultr Project A</p>
-            <h1 className="text-lg font-semibold leading-none">Reclaim</h1>
+    <div className="app-shell">
+      <header className="app-toolbar">
+        <div className="toolbar-brand">
+          <div className="brand-mark">R</div>
+          <div className="brand-copy">
+            <span>Vultr Project A</span>
+            <strong>Reclaim</strong>
           </div>
         </div>
-        <nav className="hidden items-center gap-1 rounded-md border border-border bg-card p-1 md:flex">
-          <a className="nav-pill is-active" href="#review">Review desk</a>
-          <a className="nav-pill" href="#evidence">Evidence</a>
-          <a className="nav-pill" href="#packet">Packet</a>
-        </nav>
-        <div className="flex items-center gap-2">
-          <Badge variant={backendMode === "live" ? "success" : backendMode === "checking" ? "muted" : "warning"}>
-            {backendMode === "live" ? "Live backend" : backendMode === "checking" ? "Checking" : "Fallback"}
-          </Badge>
-          <Button className="mobile-secondary-action" variant="outline" size="sm" onClick={() => runAudit("replay")} disabled={running}>
-            <RefreshCcw className="size-3.5" />
-            Replay
+
+        <div className="toolbar-proof" aria-label="Deployment proof">
+          <span>Deployed on Vultr</span>
+          <span>Vector receipts</span>
+          <span>{rows.length} imported circuits</span>
+        </div>
+
+        <div className="toolbar-actions">
+          <span className="runtime-state">
+            <span className={cn("runtime-dot", backendMode)} />
+            {backendMode === "live" ? "Live" : backendMode === "checking" ? "Checking" : "Fallback"}
+          </span>
+          <Button aria-label="Replay local trace" className="toolbar-icon-button" variant="ghost" size="icon" onClick={() => runAudit("replay")} disabled={running}>
+            <RefreshCcw className="size-4" />
           </Button>
-          <Button size="sm" onClick={() => runAudit("live")} disabled={running}>
+          <Button className="run-audit-button" size="sm" onClick={() => runAudit("live")} disabled={running}>
             <Play className="size-3.5" />
-            {running ? "Running" : "Run audit"}
+            <span>{running ? "Running" : "Run audit"}</span>
           </Button>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1540px] gap-4 px-4 py-4 md:px-6">
-        <section className="command-strip" id="review">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-muted-foreground">Active recovery review</p>
-            <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-2">
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{selectedCase.store}</h2>
-              <Badge variant={classificationVariant(selectedCredit.classification)}>
-                {selectedCredit.classification}
-              </Badge>
-            </div>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-              {selectedCase.id}, BAN {selectedCase.ban}. {selectedCase.plannerHint}
-            </p>
-          </div>
-          <div className="command-metrics">
-            <CommandMetric label="Calculated exposure" value={formatCurrency(exposure)} />
-            <CommandMetric label="This packet" value={formatCurrency(selectedCredit.recoverableAmount)} />
-            <CommandMetric label="Deadline" value={`${selectedCase.claimDaysLeft}d`} />
-            <CommandMetric label="Confidence" value={selectedCredit.confidence.toFixed(2)} />
-          </div>
-        </section>
+      <div className="mobile-pane-switcher" role="tablist" aria-label="Review panes">
+        <MobilePaneButton active={mobilePane === "queue"} label="Queue" value={String(rows.length)} onClick={() => setMobilePane("queue")} />
+        <MobilePaneButton active={mobilePane === "evidence"} label="Evidence" value={String(visibleEvents.length)} onClick={() => setMobilePane("evidence")} />
+        <MobilePaneButton active={mobilePane === "packet"} label="Packet" value={formatCurrency(selectedCredit.recoverableAmount)} onClick={() => setMobilePane("packet")} />
+      </div>
 
-        <section className="review-grid">
-          <aside className="review-panel min-h-0 overflow-hidden" id="portfolio">
-            <PanelHeader
-              eyebrow={`${rows.length} circuits`}
-              title="Claim queue"
-              right={<Badge variant="outline">{formatCurrency(exposure)}</Badge>}
-            />
-            <div className="search-row">
-              <Search className="size-4 text-muted-foreground" />
-              <span>Filter by circuit, BAN, route</span>
-            </div>
-            <div className="min-h-0 flex-1 overflow-auto">
-              {rows.map((row) => (
-                <CaseInboxRow
-                  key={row.id}
-                  row={row}
-                  selected={row.id === selectedCaseId}
-                  onSelect={() => row.live && setSelectedCaseId(row.id)}
-                />
-              ))}
-            </div>
-          </aside>
+      <main className="workbench" data-active-pane={mobilePane}>
+        <nav className="activity-rail" aria-label="Primary tools">
+          <ActivityRailButton active={mobilePane === "queue"} label="Queue" onClick={() => setMobilePane("queue")}>
+            <PanelLeft />
+          </ActivityRailButton>
+          <ActivityRailButton active={mobilePane === "evidence"} label="Evidence" onClick={() => setMobilePane("evidence")}>
+            <Activity />
+          </ActivityRailButton>
+          <ActivityRailButton active={mobilePane === "packet"} label="Packet" onClick={() => setMobilePane("packet")}>
+            <ClipboardCheck />
+          </ActivityRailButton>
+          <ActivityRailButton label="Receipts" onClick={() => setSelectedCitation("sla-tier")}>
+            <Files />
+          </ActivityRailButton>
+        </nav>
 
-          <section className="review-panel min-h-0 overflow-hidden" id="evidence">
-            <PanelHeader
-              eyebrow="Deterministic trace"
-              title="Evidence dossier"
-              right={
-                <Tabs value={selectedCaseId} onValueChange={setSelectedCaseId}>
-                  <TabsList className="h-8">
-                    {reclaimData.liveCases.slice(0, 3).map((item) => (
-                      <TabsTrigger className="h-6 px-2 text-xs" key={item.id} value={item.id}>
-                        {item.route}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              }
+        <aside className="explorer-pane">
+          <PaneHeader
+            icon={<Files className="size-4" />}
+            title="Claims"
+            meta={`${filteredRows.length}/${rows.length}`}
+            actions={<Badge className="quiet-badge" variant="outline">{formatCurrency(headlineRecovery)}</Badge>}
+          />
+          <div className="search-row">
+            <Search className="size-4" />
+            <input
+              ref={filterInputRef}
+              aria-label="Filter claims"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              placeholder="Filter circuit, BAN, route"
+              type="search"
             />
-            <div className="case-dossier">
-              <DossierFact label="Circuit" value={selectedCase.id} />
-              <DossierFact label="Ticket" value={selectedCase.intervals[0].ticket} />
-              <DossierFact label="Counted" value={`${selectedCredit.countedMinutes} min`} />
-              <DossierFact label="MRC" value={formatCurrency(selectedCase.mrc)} />
-              <DossierFact label="Uptime" value={`${selectedCredit.uptime.toFixed(2)}%`} />
-              <DossierFact label="Route" value={selectedCase.route} />
+          </div>
+          <div className="explorer-list">
+            {filteredRows.map((row) => (
+              <CaseInboxRow
+                key={row.id}
+                row={row}
+                selected={row.id === selectedCaseId}
+                onSelect={() => row.live && setSelectedCaseId(row.id)}
+              />
+            ))}
+          </div>
+          <div className="explorer-footer">
+            <InlineMeta label="Live" value={String(reclaimData.liveCases.length)} />
+            <InlineMeta label="Imported" value={String(rows.length - reclaimData.liveCases.length)} />
+          </div>
+        </aside>
+
+        <section className="editor-pane">
+          <div className="editor-contextbar">
+            <div>
+              <span>Trace</span>
+              <strong>{selectedCase.id}</strong>
             </div>
-            <TracePath events={visibleEvents} />
-            <div className="source-row">
-              <SourceReceipt id="sla-tier" onOpen={setSelectedCitation} />
-              {selectedCase.intervals.some((interval) => interval.tag === "scheduled maintenance") ? (
-                <SourceReceipt id="maintenance-notice" onOpen={setSelectedCitation} />
-              ) : (
-                <SourceSkip />
-              )}
-              <SourceReceipt id="claim-window" onOpen={setSelectedCitation} />
+            <p>{visibleEvents.length} events / {sourceReceiptCount} receipts / {formatCurrency(selectedCredit.recoverableAmount)}</p>
+          </div>
+
+          <div className="case-strip">
+            <div className="case-strip-main">
+              <div className="case-titleline">
+                <span className="mono">{selectedCase.id}</span>
+                <strong>{selectedCase.store}</strong>
+                <Badge className="status-badge" variant={classificationVariant(selectedCredit.classification)}>
+                  {selectedCredit.classification}
+                </Badge>
+              </div>
+              <div className="case-meta-row">
+                <InlineMeta label="BAN" value={selectedCase.ban} />
+                <InlineMeta label="Carrier" value={selectedCase.carrier} />
+                <InlineMeta label="Invoice" value={selectedCase.invoiceMonth} />
+                <InlineMeta label="Window" value={`${selectedCase.claimDaysLeft}d`} />
+                <InlineMeta label="Confidence" value={`${selectedCredit.confidence.toFixed(2)} / 0.80`} />
+              </div>
             </div>
-            <div className="trace-list">
+
+            <Tabs className="case-tabs-root" value={selectedCaseId} onValueChange={setSelectedCaseId}>
+              <TabsList className="case-tabs">
+                {reclaimData.liveCases.slice(0, 3).map((item) => (
+                  <TabsTrigger className="case-tab" key={item.id} value={item.id}>
+                    {routeTabLabel(item.route)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <div className="decision-line">
+            <div className="decision-copy">
+              <span>
+                <GitBranch className="size-3.5" />
+                Route decision
+              </span>
+              <strong>{decisionHeadline}</strong>
+              <p>{selectedCredit.countedMinutes} counted minutes vs {selectedCase.slaTarget}% SLA. Maintenance and billing checked.</p>
+            </div>
+            <div className="decision-readout">
+              <small>Recoverable</small>
+              <strong>{formatCurrency(selectedCredit.recoverableAmount)}</strong>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setSelectedCitation("maintenance-notice")}>
+              <FileCheck2 className="size-3.5" />
+              Clause
+            </Button>
+          </div>
+
+          <div className="trace-board">
+            <div className="trace-board-header" aria-hidden="true">
+              <span>Step</span>
+              <span>Event</span>
+              <span>Metric</span>
+              <span>Source</span>
+            </div>
+            <div className="trace-list" key={selectedCaseId}>
               {visibleEvents.map((event, index) => (
                 <TraceRow key={`${event.eventName}-${index}`} event={event} index={index} onCitation={setSelectedCitation} />
               ))}
             </div>
-          </section>
-
-          <aside className="review-panel min-h-0 overflow-hidden" id="packet">
-            <PanelHeader
-              eyebrow={approval?.action === "approve" ? "Approval recorded" : "Human gate"}
-              title="Claim packet"
-              right={<Badge variant={approval?.action === "approve" ? "success" : "warning"}>{approval?.action === "approve" ? "Approved" : "Review"}</Badge>}
-            />
-            <PacketPreview memo={memo} approval={approval} onCitation={setSelectedCitation} />
-            <div className="approval-box">
-              <label className="text-sm font-medium" htmlFor="approval-reason">Typed audit reason</label>
-              <Textarea
-                id="approval-reason"
-                className="mt-2 min-h-[92px] resize-none"
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                placeholder="Verified outage record, SLA tier, maintenance notice, deadline, and formula row."
-              />
-              {formError ? <p className="mt-2 text-sm text-destructive">{formError}</p> : null}
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => submitApproval("override")}>
-                  <RefreshCcw className="size-4" />
-                  Override
-                </Button>
-                <Button onClick={() => submitApproval("approve")}>
-                  <LockKeyhole className="size-4" />
-                  Approve
-                </Button>
-              </div>
-            </div>
-          </aside>
+          </div>
         </section>
+
+        <aside className="inspector-pane">
+          <PaneHeader
+            icon={<ClipboardCheck className="size-4" />}
+            title="Packet"
+            meta={approval?.action === "approve" ? "Locked" : "Human gate"}
+            actions={<Badge className="status-badge" variant={approval?.action === "approve" ? "success" : "warning"}>{approval?.action === "approve" ? "Approved" : "Review"}</Badge>}
+          />
+          <PacketPreview memo={memo} approval={approval} onCitation={setSelectedCitation} />
+          <div className="approval-box">
+            <label htmlFor="approval-reason">Typed audit reason</label>
+            <Textarea
+              id="approval-reason"
+              className="approval-textarea"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Verified outage record, SLA tier, maintenance notice, deadline, and formula row."
+            />
+            {formError ? <p className="form-error">{formError}</p> : null}
+            <div className="approval-actions">
+              <Button variant="outline" onClick={() => submitApproval("override")}>
+                <RefreshCcw className="size-4" />
+                Override
+              </Button>
+              <Button onClick={() => submitApproval("approve")} disabled={!reason.trim()}>
+                <LockKeyhole className="size-4" />
+                Approve
+              </Button>
+            </div>
+          </div>
+        </aside>
       </main>
 
-      <CitationSheet id={selectedCitation} doc={selectedDoc} onOpenChange={(open) => !open && setSelectedCitation(null)} />
+      <StatusBar
+        approval={approval}
+        backendLabel={backendLabel}
+        backendMode={backendMode}
+        formError={formError}
+        receiptCount={sourceReceiptCount}
+        running={running}
+        selectedCaseId={selectedCase.id}
+      />
+
+      <CitationSheet
+        id={selectedCitation}
+        doc={selectedDoc}
+        supportLine={citationSupportLine(selectedCitation, selectedCase, selectedCredit)}
+        onOpenChange={(open) => !open && setSelectedCitation(null)}
+      />
     </div>
   )
 }
 
-function PanelHeader({
-  eyebrow,
+function PaneHeader({
+  actions,
+  icon,
+  meta,
   title,
-  right,
 }: {
-  eyebrow: string
+  actions?: ReactNode
+  icon: ReactNode
+  meta: string
   title: string
-  right?: ReactNode
 }) {
   return (
-    <div className="panel-header">
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-muted-foreground">{eyebrow}</p>
-        <h3 className="mt-1 truncate text-base font-semibold">{title}</h3>
+    <div className="pane-header">
+      <div className="pane-title">
+        <span>{icon}</span>
+        <strong>{title}</strong>
+        <small>{meta}</small>
       </div>
-      {right ? <div className="shrink-0">{right}</div> : null}
+      {actions ? <div className="pane-actions">{actions}</div> : null}
     </div>
   )
 }
 
-function CommandMetric({ label, value }: { label: string; value: string }) {
+function ActivityRailButton({
+  active,
+  children,
+  label,
+  onClick,
+}: {
+  active?: boolean
+  children: ReactNode
+  label: string
+  onClick: () => void
+}) {
   return (
-    <div className="command-metric">
-      <p>{label}</p>
+    <button className={cn("rail-button", active && "is-active")} type="button" aria-label={label} title={label} onClick={onClick}>
+      {children}
+    </button>
+  )
+}
+
+function InlineMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="inline-meta">
+      <span>{label}</span>
       <strong>{value}</strong>
-    </div>
+    </span>
+  )
+}
+
+function MobilePaneButton({
+  active,
+  label,
+  value,
+  onClick,
+}: {
+  active: boolean
+  label: string
+  value: string
+  onClick: () => void
+}) {
+  return (
+    <button className={cn("mobile-pane-button", active && "is-active")} type="button" role="tab" aria-selected={active} onClick={onClick}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </button>
+  )
+}
+
+function StatusBar({
+  approval,
+  backendMode,
+  formError,
+  receiptCount,
+  running,
+  selectedCaseId,
+}: {
+  approval: ApprovalRecord | null
+  backendLabel: string
+  backendMode: BackendMode
+  formError: string
+  receiptCount: number
+  running: boolean
+  selectedCaseId: string
+}) {
+  const state = formError || (running ? "Audit running" : approval ? "Approval recorded" : "Ready")
+  const stackLabel =
+    backendMode === "live"
+      ? "Vultr Compute + receipt store"
+      : backendMode === "checking"
+        ? "Checking backend"
+        : "Local deterministic fallback"
+
+  return (
+    <footer className="statusbar">
+      <span>{stackLabel}</span>
+      <span>{selectedCaseId}</span>
+      <span>{receiptCount} receipts</span>
+      <strong>{state}</strong>
+    </footer>
   )
 }
 
 function CaseInboxRow({ row, selected, onSelect }: { row: PortfolioRow; selected: boolean; onSelect: () => void }) {
+  const liveCase = reclaimData.liveCases.find((item) => item.id === row.id)
+  const meta = liveCase ? `${row.store} / BAN ${row.ban}` : `${row.store} / imported`
+
   return (
     <button
       className={cn("case-inbox-row", selected && "is-selected", !row.live && "is-muted")}
       onClick={onSelect}
+      disabled={!row.live}
       type="button"
     >
-      <span className="min-w-0">
-        <span className="mono block truncate text-sm font-semibold">{row.id}</span>
-        <span className="mt-1 block truncate text-sm text-muted-foreground">{row.store}</span>
+      <span className="case-row-status" data-route={slug(row.route)} />
+      <span className="case-row-copy">
+        <strong className="mono">{row.id}</strong>
+        <small>{meta}</small>
       </span>
-      <span className="grid justify-items-end gap-2">
-        <span className="tabular text-sm font-semibold">{formatCurrency(row.amount)}</span>
-        <Badge variant={routeVariant(row.route)}>{row.route}</Badge>
-      </span>
-    </button>
-  )
-}
-
-function DossierFact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="dossier-fact">
-      <p>{label}</p>
-      <strong>{value}</strong>
-    </div>
-  )
-}
-
-function TracePath({ events }: { events: TraceEvent[] }) {
-  return (
-    <div className="trace-path" aria-label="Trace path">
-      {events.slice(0, 6).map((event, index) => (
-        <div className="trace-node" key={`${event.eventName}-${index}`}>
-          <div className={cn("trace-node-dot", event.kind)}>{index + 1}</div>
-          <p>{traceShortName(event.eventName)}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function SourceReceipt({ id, onOpen }: { id: string; onOpen: (id: string) => void }) {
-  const doc = reclaimData.documents[id]
-  return (
-    <button className="source-card" type="button" onClick={() => onOpen(id)}>
-      <BookOpen className="size-4 text-primary" />
-      <span>
-        <strong>{doc.page}</strong>
-        <small>{doc.title.replace("Northstar Telecom MSA - ", "")}</small>
+      <span className="case-row-amount">
+        <strong>{formatCurrency(row.amount)}</strong>
+        <small>{routeTabLabel(row.route)}</small>
       </span>
     </button>
-  )
-}
-
-function SourceSkip() {
-  return (
-    <div className="source-card is-passive">
-      <CheckCircle2 className="size-4 text-emerald-700" />
-      <span>
-        <strong>Exclusion skipped</strong>
-        <small>No ambiguous maintenance interval.</small>
-      </span>
-    </div>
   )
 }
 
 function TraceRow({ event, index, onCitation }: { event: TraceEvent; index: number; onCitation: (id: string) => void }) {
   return (
-    <article className="trace-row">
-      <div className="trace-index">{String(index + 1).padStart(2, "0")}</div>
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
+    <article className="trace-row" data-kind={event.kind}>
+      <div className="trace-step">
+        <strong>{String(index + 1).padStart(2, "0")}</strong>
+        <span>{traceKindLabel(event.kind)}</span>
+      </div>
+      <div className="trace-copy">
+        <div>
           <h4>{event.title}</h4>
-          <Badge variant={eventVariant(event.kind, event.status)}>{event.status}</Badge>
+          <Badge className="status-badge" variant={eventVariant(event.kind, event.status)}>{event.status}</Badge>
         </div>
         <p>{event.detail}</p>
-        <strong>{event.metric}</strong>
       </div>
-      <div className="flex shrink-0 flex-wrap justify-end gap-2">
+      <strong className="trace-metric">{event.metric}</strong>
+      <div className="trace-actions">
         {(event.citationIds || []).map((id) => (
-          <Button key={id} variant="outline" size="sm" onClick={() => onCitation(id)}>
+          <button className="citation-link" key={id} type="button" onClick={() => onCitation(id)}>
             <FileCheck2 className="size-3.5" />
-            {reclaimData.documents[id]?.page || id}
-          </Button>
+            {citationShortLabel(id)}
+          </button>
         ))}
       </div>
     </article>
@@ -461,25 +598,66 @@ function PacketPreview({
   approval: ApprovalRecord | null
   onCitation: (id: string) => void
 }) {
+  const receiptIds = Object.values(memo.citations).filter(Boolean) as string[]
+  const sourceCase = reclaimData.liveCases.find((item) => item.id === memo.caseId)
+  const credit = sourceCase ? creditForCase(sourceCase) : null
+
   return (
     <div className="packet-preview">
-      <div className="packet-cover">
+      <section className="packet-summary">
         <div>
-          <p>Draft packet</p>
-          <h3>{memo.store}</h3>
+          <span>Draft packet</span>
+          <strong>{memo.store}</strong>
+          <small>{memo.caseId} / BAN {memo.ban}</small>
         </div>
-        <strong>{formatCurrency(memo.amount)}</strong>
-      </div>
-      <PacketField label="Carrier" value={memo.carrier} />
-      <PacketField label="Circuit" value={memo.circuit} />
-      <PacketField label="Availability" value={memo.availability} citation={memo.citations.availability} onCitation={onCitation} />
-      <PacketField label="Exclusion" value={memo.exclusionDecision} citation={memo.citations.exclusion} onCitation={onCitation} />
-      <PacketField label="Deadline" value={memo.deadline} citation={memo.citations.deadline} onCitation={onCitation} />
-      <PacketField label="Confidence" value={memo.confidenceLabel} />
+        <div className="packet-amount">
+          <small>Claim</small>
+          <strong>{formatCurrency(memo.amount)}</strong>
+        </div>
+      </section>
+
+      {sourceCase && credit ? <PacketFormula item={sourceCase} credit={credit} /> : null}
+
+      <section className="inspector-section">
+        <div className="section-label">
+          <Files className="size-4" />
+          <span>{receiptIds.length} receipts</span>
+        </div>
+        <div className="receipt-list">
+          {receiptIds.map((id) => {
+            const doc = reclaimData.documents[id]
+            return (
+              <button className="receipt-row" key={id} type="button" onClick={() => onCitation(id)}>
+                <FileCheck2 className="size-3.5" />
+                <span>
+                  <strong>{citationShortLabel(id)}</strong>
+                  <small>{doc.title.replace("Northstar Telecom MSA - ", "")}</small>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="field-list">
+        <PacketField label="Carrier" value={memo.carrier} />
+        <PacketField label="Circuit" value={memo.circuit} />
+        <PacketField label="Availability" value={memo.availability} citation={memo.citations.availability} onCitation={onCitation} />
+        <PacketField label="Exclusion" value={memo.exclusionDecision} citation={memo.citations.exclusion} onCitation={onCitation} />
+        <PacketField label="Deadline" value={memo.deadline} citation={memo.citations.deadline} onCitation={onCitation} />
+        <PacketField label="Confidence" value={memo.confidenceLabel} />
+      </section>
+
       {approval ? (
         <div className="approval-note">
           <ShieldCheck className="size-4" />
-          <span>{approval.reason}</span>
+          <span>
+            <strong>{approval.action === "approve" ? "Packet locked for filing" : "Override recorded"}</strong>
+            <small>
+              {approval.timestamp ? new Date(approval.timestamp).toLocaleString() : "Audit timestamp recorded"} / {approval.source || "live backend"}
+            </small>
+            <em>{approval.reason}</em>
+          </span>
         </div>
       ) : null}
     </div>
@@ -503,42 +681,78 @@ function PacketField({
       <strong>{value}</strong>
       {citation && onCitation ? (
         <button type="button" onClick={() => onCitation(citation)}>
-          Receipt
+          {citationShortLabel(citation)}
         </button>
       ) : null}
     </div>
   )
 }
 
+function PacketFormula({ item, credit }: { item: typeof reclaimData.liveCases[number]; credit: ReturnType<typeof creditForCase> }) {
+  const tierAmount = item.mrc * 0.1
+  const confidenceItems = [
+    { label: "Retrieval", value: item.retrievalMatch },
+    { label: "Ambiguity", value: item.ambiguityResolution },
+    { label: "Billing", value: item.billingCertainty },
+  ]
+
+  return (
+    <section className="formula-panel">
+      <div className="formula-line">
+        <Gauge className="size-4" />
+        <span>{formatCurrency(item.mrc)} MRC</span>
+        <small>x</small>
+        <span>10% SLA tier</span>
+        <small>=</small>
+        <strong>{formatCurrency(tierAmount)}</strong>
+      </div>
+      <div className="formula-meta">
+        <InlineMeta label="Ticket" value={item.intervals[0].ticket} />
+        <InlineMeta label="Downtime" value={`${credit.countedMinutes} min`} />
+        <InlineMeta label="Uptime" value={`${credit.uptime.toFixed(2)}%`} />
+      </div>
+      <div className="confidence-list">
+        {confidenceItems.map((entry) => (
+          <div className="confidence-row" key={entry.label}>
+            <span>{entry.label}</span>
+            <div><i style={{ width: `${Math.round(entry.value * 100)}%` }} /></div>
+            <strong>{entry.value.toFixed(2)}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function CitationSheet({
   id,
   doc,
+  supportLine,
   onOpenChange,
 }: {
   id: string | null
   doc: DocumentReceipt | null
+  supportLine: string
   onOpenChange: (open: boolean) => void
 }) {
   return (
     <Sheet open={Boolean(id)} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader>
+      <SheetContent className="source-sheet">
+        <SheetHeader className="source-sheet-header">
           <SheetTitle>Source receipt</SheetTitle>
           <SheetDescription>{doc?.title || "Clause evidence"}</SheetDescription>
         </SheetHeader>
         {doc ? (
-          <div className="flex-1 overflow-auto px-6 pb-6">
-            <div className="overflow-hidden rounded-lg border border-border bg-muted/30">
-              <img className="w-full border-b border-border bg-background" src={`/app/${doc.asset}`} alt={`Highlighted clause from ${doc.title}`} />
-              <div className="grid gap-4 p-4">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Location</p>
-                  <p className="mt-1 text-sm font-semibold">{doc.page}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Cited text</p>
-                  <p className="mt-1 text-sm leading-6">{doc.excerpt}</p>
-                </div>
+          <div className="source-sheet-body">
+            <div className="support-line">
+              <p>Supports memo line</p>
+              <strong>{supportLine}</strong>
+            </div>
+            <div className="receipt-document">
+              <img src={`/app/${doc.asset}`} alt={`Highlighted clause from ${doc.title}`} />
+              <div>
+                <PacketField label="Location" value={doc.page} />
+                <PacketField label="Cited text" value={doc.excerpt} />
               </div>
             </div>
           </div>
@@ -548,38 +762,69 @@ function CitationSheet({
   )
 }
 
-function traceShortName(eventName: string) {
-  if (eventName.includes("plan")) return "Plan"
-  if (eventName.includes("outage")) return "Outage"
-  if (eventName.includes("uptime")) return "Uptime"
-  if (eventName.includes("sla")) return "SLA"
-  if (eventName.includes("exclusion")) return "Clause"
-  if (eventName.includes("credit")) return "Credit"
-  return "Memo"
+function traceKindLabel(kind: TraceEvent["kind"]) {
+  if (kind === "retrieval") return "RAG"
+  if (kind === "tool") return "Tool"
+  if (kind === "memo") return "Memo"
+  if (kind === "skip") return "Skip"
+  if (kind === "decision") return "Rule"
+  return "Plan"
+}
+
+function compactPlannerHint(hint: string) {
+  const key = slug(hint)
+  if (key.includes("scheduled-maintenance")) return "Maintenance lacks required notice. Billing complete."
+  if (key.includes("billing-history")) return "Billing history checked. No duplicate credit."
+  if (key.includes("prior") || key.includes("credit")) return "Prior credit found. Recovery blocked."
+  if (key.includes("clean")) return "Clean SLA breach. Formula ready."
+  return hint
+}
+
+function citationShortLabel(id: string) {
+  if (id === "sla-tier") return "Exhibit B p14"
+  if (id === "maintenance-notice") return "MSA 7.3"
+  if (id === "claim-window") return "Claim 9.1"
+  if (id === "invoice-credit") return "Invoice line 44"
+  return id
+}
+
+function citationSupportLine(id: string | null, item: typeof reclaimData.liveCases[number], credit: ReturnType<typeof creditForCase>) {
+  if (id === "sla-tier") {
+    return `${formatCurrency(item.mrc)} MRC x 10% SLA tier = ${formatCurrency(credit.recoverableAmount)}.`
+  }
+  if (id === "maintenance-notice") {
+    return "Maintenance label counts because required 5-day notice is missing."
+  }
+  if (id === "claim-window") {
+    return `${item.claimDaysLeft} days left to file for ${item.invoiceMonth}.`
+  }
+  if (id === "invoice-credit") {
+    return "Prior service-credit line blocks duplicate recovery."
+  }
+  return "Source receipt supports the selected recovery memo line."
 }
 
 function classificationVariant(classification: string) {
   const key = slug(classification)
-  if (key.includes("deadline")) return "warning"
-  if (key.includes("credit-owed")) return "success"
+  if (key.includes("deadline") || key.includes("review")) return "warning"
+  if (key.includes("credit-owed")) return "default"
   if (key.includes("already")) return "muted"
-  if (key.includes("review")) return "violet"
+  if (key.includes("excluded")) return "muted"
   return "outline"
 }
 
-function routeVariant(route: string) {
+function routeTabLabel(route: string) {
   const key = slug(route)
-  if (key.includes("deadline")) return "warning"
-  if (key.includes("deep")) return "violet"
-  if (key.includes("credit")) return "success"
-  return "muted"
+  if (key.includes("already")) return "credited"
+  if (key.includes("deep")) return "deep"
+  return route
 }
 
 function eventVariant(kind: TraceEvent["kind"], status: string) {
   const key = slug(`${kind}-${status}`)
-  if (key.includes("urgent") || key.includes("deadline")) return "warning"
+  if (key.includes("urgent") || key.includes("deadline") || key.includes("review")) return "warning"
   if (key.includes("retrieval") || key.includes("counts")) return "violet"
-  if (key.includes("memo") || key.includes("ready") || key.includes("clear")) return "success"
+  if (key.includes("memo") || key.includes("ready")) return "default"
   return "muted"
 }
 
