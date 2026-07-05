@@ -6,13 +6,25 @@ $proj = 'F:\csProj\reclaim\reclaim\vultr-project-a'
 $key = "$env:USERPROFILE\.ssh\reclaim_vultr"
 $sshOpts = @('-i', $key, '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ConnectTimeout=10')
 
-# 1. Pack the app (backend + vanilla app + assets + .env), excluding junk
+# 1. Build and pack the app (Vite dist + backend + legacy app/assets + .env), excluding junk
+Push-Location $proj
+try {
+    npm install
+    if ($LASTEXITCODE -ne 0) { throw 'npm install failed' }
+    npm run build
+    if ($LASTEXITCODE -ne 0) { throw 'npm run build failed' }
+}
+finally {
+    Pop-Location
+}
+
 $stage = Join-Path $env:TEMP 'reclaim-deploy'
 if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
 New-Item -ItemType Directory -Force $stage | Out-Null
 Copy-Item -Recurse "$proj\backend" "$stage\backend"
 Copy-Item -Recurse "$proj\app" "$stage\app"
-Copy-Item "$proj\.env" "$stage\.env"
+Copy-Item -Recurse "$proj\dist" "$stage\dist"
+Copy-Item "$proj\.env" "$stage\.env" -ErrorAction SilentlyContinue
 Copy-Item "$proj\docker-compose.yml" "$stage\docker-compose.yml" -ErrorAction SilentlyContinue
 Get-ChildItem -Recurse $stage -Directory -Filter '__pycache__' | Remove-Item -Recurse -Force
 Get-ChildItem -Recurse $stage -Directory -Filter 'var' | Remove-Item -Recurse -Force

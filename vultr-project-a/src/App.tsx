@@ -17,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react"
 
+import { API_BASE, approveCase, getCaseEvents, getCaseMemo, getHealth, runCase } from "@/api/reclaimClient"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -51,35 +52,33 @@ import {
 
 type BackendMode = "checking" | "live" | "fallback"
 type MobilePane = "queue" | "evidence" | "packet"
+type AppRoute = { section: "workbench" | "cases" | "case" | "approvals" | "sources" | "system"; caseId?: string }
 
-const API_BASE =
-  (import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL ||
-  (window.location.port === "8765" ? "" : "http://127.0.0.1:8765")
-
-function apiUrl(path: string) {
-  return `${API_BASE}${path}`
+function parseRoute(pathname = window.location.pathname): AppRoute {
+  const parts = pathname.split("/").filter(Boolean)
+  if (parts.length === 0) return { section: "workbench" }
+  if (parts[0] === "workbench") return { section: "workbench" }
+  if (parts[0] === "cases" && parts[1]) return { section: "case", caseId: decodeURIComponent(parts[1]) }
+  if (parts[0] === "cases") return { section: "cases" }
+  if (parts[0] === "approvals") return { section: "approvals" }
+  if (parts[0] === "sources") return { section: "sources" }
+  if (parts[0] === "system") return { section: "system" }
+  return { section: "workbench" }
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(apiUrl(path), {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-    ...init,
-  })
-  const text = await response.text()
-  const body = text ? JSON.parse(text) : null
-  if (!response.ok) {
-    throw new Error(body?.message || body?.error || `HTTP ${response.status}`)
-  }
-  return body as T
+function pathForRoute(route: AppRoute) {
+  if (route.section === "case" && route.caseId) return `/cases/${encodeURIComponent(route.caseId)}`
+  if (route.section === "cases") return "/cases"
+  if (route.section === "approvals") return "/approvals"
+  if (route.section === "sources") return "/sources"
+  if (route.section === "system") return "/system"
+  return "/workbench"
 }
 
 function App() {
   const rows = useMemo(() => allRows(), [])
   const exposure = useMemo(() => calculatedExposure(), [])
+  const [route, setRoute] = useState<AppRoute>(() => parseRoute())
   const [targetRecovery, setTargetRecovery] = useState(exposure)
   const headlineRecovery = targetRecovery
   const [healthSnapshot, setHealthSnapshot] = useState<HealthSnapshot>({})
@@ -107,10 +106,46 @@ function App() {
     if (!query) return rows
     return rows.filter((row) => [row.id, row.ban, row.store, row.route].some((value) => value.toLowerCase().includes(query)))
   }, [filter, rows])
+  const currentRoute = route.section === "case" ? "workbench" : route.section
+
+  useEffect(() => {
+    if (window.location.pathname === "/") {
+      window.history.replaceState(null, "", "/workbench")
+    }
+
+    function onPopState() {
+      setRoute(parseRoute())
+    }
+
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
+
+  useEffect(() => {
+    if (!route.caseId) return
+    if (reclaimData.liveCases.some((item) => item.id === route.caseId)) {
+      setSelectedCaseId(route.caseId)
+    }
+  }, [route.caseId])
+
+  function navigate(nextRoute: AppRoute) {
+    const path = pathForRoute(nextRoute)
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, "", path)
+    }
+    setRoute(nextRoute)
+  }
+
+  function openCase(caseId: string, mode: "workbench" | "case" = "workbench") {
+    setSelectedCaseId(caseId)
+    if (mode === "case") {
+      navigate({ section: "case", caseId })
+    }
+  }
 
   useEffect(() => {
     let active = true
-    requestJson<Record<string, unknown>>("/health")
+    getHealth()
       .then((health) => {
         if (!active) return
         const snapshot = parseHealthSnapshot(health)
@@ -166,20 +201,13 @@ function App() {
 
     try {
       if (backendMode === "live" && mode === "live") {
-        await requestJson(`/cases/${encodeURIComponent(auditCaseId)}/run`, {
-          method: "POST",
-          body: JSON.stringify({ requestedBy: "submission-review" }),
-        })
-        const eventPayload = await requestJson<{ events?: TraceEvent[] }>(
-          `/api/cases/${encodeURIComponent(auditCaseId)}/events`,
-        )
+        await runCase(auditCaseId)
+        const eventPayload = await getCaseEvents(auditCaseId)
         if (activeAuditCaseRef.current !== auditCaseId) return
         const backendEvents = (eventPayload.events || []).map(normalizeBackendEvent)
         setEvents(backendEvents.length ? backendEvents : localTrace(auditCase))
 
-        const memoPayload = await requestJson<Partial<ClaimMemo>>(
-          `/api/cases/${encodeURIComponent(auditCaseId)}/memo`,
-        )
+        const memoPayload = await getCaseMemo(auditCaseId)
         if (activeAuditCaseRef.current !== auditCaseId) return
         setMemo({ ...localMemo(auditCase), ...memoPayload })
       } else {
@@ -207,10 +235,7 @@ function App() {
     try {
       let record: ApprovalRecord
       if (backendMode === "live") {
-        record = await requestJson<ApprovalRecord>(`/cases/${encodeURIComponent(selectedCase.id)}/approve`, {
-          method: "POST",
-          body: JSON.stringify({ action, reason: reason.trim() }),
-        })
+        record = await approveCase(selectedCase.id, action, reason.trim())
       } else {
         record = {
           action,
@@ -242,6 +267,14 @@ function App() {
           </div>
         </div>
 
+        <nav className="app-nav" aria-label="Product navigation">
+          <NavButton active={currentRoute === "workbench"} label="Workbench" onClick={() => navigate({ section: "workbench" })} />
+          <NavButton active={currentRoute === "cases"} label="Cases" onClick={() => navigate({ section: "cases" })} />
+          <NavButton active={currentRoute === "approvals"} label="Approvals" onClick={() => navigate({ section: "approvals" })} />
+          <NavButton active={currentRoute === "sources"} label="Sources" onClick={() => navigate({ section: "sources" })} />
+          <NavButton active={currentRoute === "system"} label="System" onClick={() => navigate({ section: "system" })} />
+        </nav>
+
         <div className="toolbar-proof" aria-label="Deployment proof">
           <span>{deploymentProofLabel(backendMode, healthSnapshot)}</span>
           <span>{retrievalProofLabel(backendMode, healthSnapshot)}</span>
@@ -269,12 +302,21 @@ function App() {
         <MobilePaneButton active={mobilePane === "packet"} label="Packet" value={formatCurrency(selectedCredit.recoverableAmount)} onClick={() => setMobilePane("packet")} />
       </div>
 
-      <main
-        className="workbench"
-        data-active-pane={mobilePane}
-        data-explorer={explorerOpen ? "open" : "closed"}
-        data-inspector={inspectorOpen ? "open" : "closed"}
-      >
+      {route.section === "cases" ? (
+        <CasesRoute rows={filteredRows} selectedCaseId={selectedCaseId} onOpenCase={(caseId) => openCase(caseId, "case")} />
+      ) : route.section === "approvals" ? (
+        <ApprovalsRoute approval={approval} onOpenCase={(caseId) => openCase(caseId, "case")} />
+      ) : route.section === "sources" ? (
+        <SourcesRoute onCitation={setSelectedCitation} />
+      ) : route.section === "system" ? (
+        <SystemRoute backendLabel={backendLabel} backendMode={backendMode} healthSnapshot={healthSnapshot} rows={rows} />
+      ) : (
+        <main
+          className="workbench"
+          data-active-pane={mobilePane}
+          data-explorer={explorerOpen ? "open" : "closed"}
+          data-inspector={inspectorOpen ? "open" : "closed"}
+        >
         <nav className="activity-rail" aria-label="Primary tools">
           <ActivityRailButton
             active={explorerOpen}
@@ -337,7 +379,7 @@ function App() {
                 key={row.id}
                 row={row}
                 selected={row.id === selectedCaseId}
-                onSelect={() => row.live && setSelectedCaseId(row.id)}
+                onSelect={() => row.live && openCase(row.id, route.section === "case" ? "case" : "workbench")}
               />
             ))}
           </div>
@@ -374,7 +416,7 @@ function App() {
               </div>
             </div>
 
-            <Tabs className="case-tabs-root" value={selectedCaseId} onValueChange={setSelectedCaseId}>
+            <Tabs className="case-tabs-root" value={selectedCaseId} onValueChange={(caseId) => openCase(caseId, route.section === "case" ? "case" : "workbench")}>
               <TabsList className="case-tabs">
                 {reclaimData.liveCases.slice(0, 3).map((item) => (
                   <TabsTrigger className="case-tab" key={item.id} value={item.id}>
@@ -449,7 +491,8 @@ function App() {
             </div>
           </div>
         </aside>
-      </main>
+        </main>
+      )}
 
       <StatusBar
         approval={approval}
@@ -494,6 +537,14 @@ function PaneHeader({
   )
 }
 
+function NavButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return (
+    <button className={cn("nav-button", active && "is-active")} type="button" aria-current={active ? "page" : undefined} onClick={onClick}>
+      {label}
+    </button>
+  )
+}
+
 function ActivityRailButton({
   active,
   children,
@@ -509,6 +560,199 @@ function ActivityRailButton({
     <button className={cn("rail-button", active && "is-active")} type="button" aria-label={label} title={label} onClick={onClick}>
       {children}
     </button>
+  )
+}
+
+function RoutePageShell({
+  actions,
+  children,
+  kicker,
+  title,
+}: {
+  actions?: ReactNode
+  children: ReactNode
+  kicker: string
+  title: string
+}) {
+  return (
+    <main className="route-page">
+      <header className="route-page-header">
+        <div>
+          <span>{kicker}</span>
+          <h1>{title}</h1>
+        </div>
+        {actions ? <div className="route-page-actions">{actions}</div> : null}
+      </header>
+      {children}
+    </main>
+  )
+}
+
+function CasesRoute({
+  onOpenCase,
+  rows,
+  selectedCaseId,
+}: {
+  onOpenCase: (caseId: string) => void
+  rows: PortfolioRow[]
+  selectedCaseId: string
+}) {
+  const liveCount = rows.filter((row) => row.live).length
+  const exposure = rows.reduce((sum, row) => sum + row.amount, 0)
+
+  return (
+    <RoutePageShell
+      kicker="Portfolio"
+      title="Cases"
+      actions={
+        <>
+          <Badge className="quiet-badge" variant="outline">{liveCount} live</Badge>
+          <Badge className="quiet-badge" variant="outline">{formatCurrency(exposure)}</Badge>
+        </>
+      }
+    >
+      <section className="route-grid">
+        <div className="route-panel route-panel-wide">
+          <div className="case-table-head">
+            <span>Circuit</span>
+            <span>BAN</span>
+            <span>Store</span>
+            <span>Route</span>
+            <span>Recovery</span>
+            <span>Status</span>
+          </div>
+          <div className="case-table-body">
+            {rows.map((row) => (
+              <button
+                className={cn("case-table-row", row.id === selectedCaseId && "is-selected", !row.live && "is-muted")}
+                disabled={!row.live}
+                key={row.id}
+                onClick={() => row.live && onOpenCase(row.id)}
+                type="button"
+              >
+                <strong className="mono">{row.id}</strong>
+                <span>{row.ban}</span>
+                <span>{row.store}</span>
+                <Badge className="status-badge" variant={classificationVariant(row.route)}>{routeTabLabel(row.route)}</Badge>
+                <strong>{formatCurrency(row.amount)}</strong>
+                <span>{row.live ? "Live review" : "Preprocessed"}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    </RoutePageShell>
+  )
+}
+
+function ApprovalsRoute({ approval, onOpenCase }: { approval: ApprovalRecord | null; onOpenCase: (caseId: string) => void }) {
+  const cases = reclaimData.liveCases.map((item) => ({ item, credit: creditForCase(item) }))
+
+  return (
+    <RoutePageShell kicker="Governance" title="Approvals">
+      <section className="route-grid two-col">
+        <div className="route-panel">
+          <h2>Approval queue</h2>
+          <div className="approval-list">
+            {cases.map(({ item, credit }) => (
+              <button className="approval-route-row" key={item.id} onClick={() => onOpenCase(item.id)} type="button">
+                <span>
+                  <strong className="mono">{item.id}</strong>
+                  <small>{item.store} / BAN {item.ban}</small>
+                </span>
+                <Badge className="status-badge" variant={classificationVariant(credit.classification)}>{credit.classification}</Badge>
+                <strong>{formatCurrency(credit.recoverableAmount)}</strong>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="route-panel">
+          <h2>Latest decision</h2>
+          {approval ? (
+            <div className="approval-record-card">
+              <BadgeCheck className="size-5" />
+              <strong>{approval.action === "approve" ? "Approved recovery" : "Override recorded"}</strong>
+              <p>{approval.reason}</p>
+              <small>{approval.timestamp ? new Date(approval.timestamp).toLocaleString() : "Timestamp pending"}</small>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <ClipboardCheck className="size-5" />
+              <strong>No approval recorded in this session</strong>
+              <p>Open a live case, verify the memo, and type a reason to lock the packet.</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </RoutePageShell>
+  )
+}
+
+function SourcesRoute({ onCitation }: { onCitation: (id: string) => void }) {
+  return (
+    <RoutePageShell kicker="Evidence" title="Sources">
+      <section className="route-grid">
+        {Object.entries(reclaimData.documents).map(([id, doc]) => (
+          <article className="source-card" key={id}>
+            <div>
+              <FileCheck2 className="size-4" />
+              <span>{citationShortLabel(id)}</span>
+            </div>
+            <h2>{doc.title}</h2>
+            <p>{doc.excerpt}</p>
+            <small>{doc.page}</small>
+            <Button variant="outline" size="sm" onClick={() => onCitation(id)}>
+              Open receipt
+            </Button>
+          </article>
+        ))}
+      </section>
+    </RoutePageShell>
+  )
+}
+
+function SystemRoute({
+  backendLabel,
+  backendMode,
+  healthSnapshot,
+  rows,
+}: {
+  backendLabel: string
+  backendMode: BackendMode
+  healthSnapshot: HealthSnapshot
+  rows: PortfolioRow[]
+}) {
+  const items = [
+    ["Runtime", backendMode === "live" ? "Live backend" : backendMode === "checking" ? "Checking" : "Fallback"],
+    ["Deployment", healthSnapshot.deployment || "local fallback"],
+    ["Planner", healthSnapshot.plannerMode || "not reported"],
+    ["Retrieval", healthSnapshot.retrievalMode || "not reported"],
+    ["API base", API_BASE || "same origin"],
+    ["Imported cases", String(rows.length)],
+  ]
+
+  return (
+    <RoutePageShell kicker="Operations" title="System">
+      <section className="route-grid two-col">
+        <div className="route-panel">
+          <h2>Health proof</h2>
+          <div className="system-list">
+            {items.map(([label, value]) => (
+              <div className="system-row" key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="route-panel system-summary">
+          <Database className="size-5" />
+          <h2>{backendLabel}</h2>
+          <p>Labels come from `/health`; the UI does not claim Vultr services unless the backend reports them.</p>
+          <Badge className="status-badge" variant={backendMode === "live" ? "default" : "warning"}>{backendMode}</Badge>
+        </div>
+      </section>
+    </RoutePageShell>
   )
 }
 

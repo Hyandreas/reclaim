@@ -645,12 +645,16 @@ def rail_events_for_case(case: dict[str, Any]) -> list[dict[str, Any]]:
     return stamped
 
 
-def memo_for_case(case: dict[str, Any]) -> dict[str, Any]:
+def memo_for_case(case: dict[str, Any], include_live_trace: bool = True) -> dict[str, Any]:
     credit = credit_for_case(case)
-    events = rail_events_for_case(case)
+    events = rail_events_for_case(case) if include_live_trace else []
+    needs_exclusion = any(
+        interval["tag"] in {"scheduled maintenance", "customer-caused"}
+        for interval in case["intervals"]
+    )
     citations = []
     for citation_id in ["sla-tier", "maintenance-notice", "claim-window"]:
-        if citation_id == "maintenance-notice" and not plan_for_case(case)["needsExclusion"]:
+        if citation_id == "maintenance-notice" and not needs_exclusion:
             continue
         citations.append({"citationId": citation_id, **DOCUMENTS[citation_id]})
     if credit["alreadyCredited"] > 0:
@@ -770,7 +774,7 @@ def init_db() -> None:
                 values(?, ?, ?)
                 on conflict(case_id) do update set payload = excluded.payload, memo = excluded.memo
                 """,
-                (case["id"], json.dumps(case), json.dumps(memo_for_case(case))),
+                (case["id"], json.dumps(case), json.dumps(memo_for_case(case, include_live_trace=False))),
             )
 
 

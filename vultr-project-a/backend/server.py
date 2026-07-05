@@ -24,6 +24,7 @@ from reclaim_core import (
 
 
 APP_DIR = ROOT / "app"
+DIST_DIR = ROOT / "dist"
 
 
 class ReclaimHandler(BaseHTTPRequestHandler):
@@ -181,13 +182,20 @@ class ReclaimHandler(BaseHTTPRequestHandler):
         self.close_connection = True
 
     def serve_static(self, path: str) -> None:
-        if path == "/":
-            path = "/index.html"
-        safe_path = Path(unquote(path.lstrip("/")))
-        file_path = (APP_DIR / safe_path).resolve()
-        if not str(file_path).startswith(str(APP_DIR.resolve())) or not file_path.is_file():
-            self.write_error(404, "file not found")
-            return
+        if path.startswith("/app/") or path == "/app":
+            relative_path = path.removeprefix("/app").lstrip("/") or "index.html"
+            file_path = self.resolve_static_file(APP_DIR, relative_path)
+            if file_path is None:
+                self.write_error(404, "file not found")
+                return
+        else:
+            relative_path = path.lstrip("/") or "index.html"
+            file_path = self.resolve_static_file(DIST_DIR, relative_path)
+            if file_path is None:
+                file_path = self.resolve_static_file(DIST_DIR, "index.html")
+            if file_path is None:
+                self.write_error(404, "file not found")
+                return
         content = file_path.read_bytes()
         content_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
         self.send_response(200)
@@ -195,6 +203,17 @@ class ReclaimHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
         self.wfile.write(content)
+
+    def resolve_static_file(self, root: Path, path: str) -> Path | None:
+        root = root.resolve()
+        file_path = (root / Path(unquote(path))).resolve()
+        try:
+            file_path.relative_to(root)
+        except ValueError:
+            return None
+        if not file_path.is_file():
+            return None
+        return file_path
 
 
 def main() -> None:
